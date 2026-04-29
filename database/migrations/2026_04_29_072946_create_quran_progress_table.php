@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
@@ -11,16 +12,53 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('quran_pages', function (Blueprint $table) {
-            $table->unsignedSmallInteger('page_number')->primary(); // 1-604
-            $table->unsignedTinyInteger('juz_number');              // 1-30
-            $table->string('juz_name', 45);
-            // No timestamps — static Quran data
+        Schema::create('quran_progress', function (Blueprint $table) {
+            $table->id();
+
+            $table->foreignId('student_id')
+                ->constrained('users')
+                ->cascadeOnDelete();
+
+            $table->foreignId('halakat_id')
+                ->constrained('halakat')
+                ->cascadeOnDelete();
+
+            // teacher_id kept for historical tracking
+            // (shows which teacher recorded this progress session)
+            $table->foreignId('teacher_id')
+                ->constrained('users')
+                ->restrictOnDelete();
+
+            $table->foreignId('surah_id')
+                ->constrained('surah')
+                ->restrictOnDelete();
+
+            $table->unsignedSmallInteger('quran_page_number');
+            $table->foreign('quran_page_number')
+                ->references('page_number')
+                ->on('quran_pages')
+                ->restrictOnDelete();
+
+            $table->unsignedSmallInteger('from_aya');
+            $table->unsignedSmallInteger('to_aya');
+
+            $table->enum('evaluation', ['excellent', 'good', 'average', 'weak'])->nullable();
+            $table->string('notes', 255)->nullable();
+
+            $table->date('date');
+            $table->timestamps();
+
+            // Indexes for the student-profile history query
+            $table->index(['student_id', 'teacher_id']);
+            $table->index(['student_id', 'halakat_id']);
+            $table->index('date');
+
         });
+        DB::statement('ALTER TABLE quran_progress ADD CONSTRAINT check_ayah_range CHECK (from_aya <= to_aya)');
     }
 
     public function down(): void
     {
-        Schema::dropIfExists('quran_pages');
+        Schema::dropIfExists('quran_progress');
     }
 };

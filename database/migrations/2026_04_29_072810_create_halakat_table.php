@@ -13,12 +13,11 @@ return new class extends Migration
     {
         Schema::create('halakat', function (Blueprint $table) {
             $table->id();
-            $table->string('name',45);
-            $table->string('notes',255)->nullable();
+            $table->string('name', 45);
+            $table->string('notes', 255)->nullable();
             $table->foreignId('teacher_id')
-                    ->unique()
-                    ->constrained('users')
-                    ->restrictOnDelete();
+                ->constrained('users')
+                ->restrictOnDelete();
             $table->timestamps();
         });
     }

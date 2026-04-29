@@ -14,20 +14,20 @@ return new class extends Migration
         Schema::create('halakat_students', function (Blueprint $table) {
             $table->id();
             $table->foreignId('student_id')
-                    ->constrained('users')
-                    ->cascadeOnDelete();
+                ->constrained('users')
+                ->cascadeOnDelete();
 
             $table->foreignId('halakat_id')
-                    ->constrained('halakat')
-                    ->cascadeOnDelete();
-            
+                ->constrained('halakat')
+                ->cascadeOnDelete();
+
             $table->date('joined_at');
             $table->date('left_at')->nullable();           // null = still active
             $table->boolean('is_active')->default(true);
-            
+
             // A student can only be ACTIVE in one halqa at a time
             // (historical rows allowed — only one row with is_active = true per student)
-            $table->unique(['studen_id','halakat_id','joined_at'],'unique_enrollment');
+            $table->unique(['student_id', 'halakat_id', 'joined_at'], 'unique_enrollment');
             $table->timestamps();
             $table->index('student_id');
             $table->index('halakat_id');
