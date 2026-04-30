@@ -40,19 +40,37 @@ class UserCrudController extends CrudController
      */
     protected function setupListOperation()
     {
-        // CRUD::setFromDb(); // set columns from db columns.
+        // Name column with search
+        CRUD::column('name')->type('text')->label('الاسم')->searchLogic(function ($query, $column, $searchTerm) {
+            $query->orWhere('name', 'like', '%'.$searchTerm.'%');
+        });
 
-        // Keep email but make it nullable
-        
-        // Add custom columns
-        CRUD::column('arabic_role')->type('text')->label('الدور'); // arabic_role is accessor
-        CRUD::column('name')->type('string')->label('الاسم');
-        CRUD::column('name')->type('string')->label('الاسم');
-        CRUD::column('phone')->type('text')->label('رقم الهاتف');
-        CRUD::column('email')->type('email')->label('البريد الالكتروني');
+        // Role column with search for Arabic and English
+        CRUD::column('arabic_role')->type('text')->label('الدور')->searchLogic(function ($query, $column, $searchTerm) {
+            $arabicToEnglish = [
+                'مدير' => 'admin',
+                'مدرس' => 'teacher',
+                'طالب' => 'student',
+            ];
+            if (isset($arabicToEnglish[$searchTerm])) {
+                $query->orWhere('role', $arabicToEnglish[$searchTerm]);
+            } else {
+                $query->orWhere('role', 'like', '%'.$searchTerm.'%');
+            }
+        });
+
+        // Other columns with search
+        CRUD::column('phone')->type('text')->label('رقم الهاتف')->searchLogic(function ($query, $column, $searchTerm) {
+            $query->orWhere('phone', 'like', '%'.$searchTerm.'%');
+        });
+
+        CRUD::column('email')->type('email')->label('البريد الإلكتروني')->searchLogic(function ($query, $column, $searchTerm) {
+            $query->orWhere('email', 'like', '%'.$searchTerm.'%');
+        });
         CRUD::column('password')->type('text')->label('كلمة المرور');
+
         CRUD::column('birth_date')->type('date')->label('تاريخ الولادة');
-        CRUD::column('created_at')->type('date')->label('تاريخ الانضمام');;
+        CRUD::column('created_at')->type('date')->label('تاريخ الانضمام');
     }
 
     /**
@@ -69,8 +87,8 @@ class UserCrudController extends CrudController
         // Add fields for your User model
         CRUD::field('name')->type('text')->label('الاسم');
         CRUD::field('phone')->type('text')->label('رقم الهاتف')->attributes(['required' => 'required', 'maxlength' => '10', 'minlength' => '10']);
-        CRUD::field('email')->type('email')->label('البريد الإلكتروني')->attributes(['required' => 'required','unique' ]);
-        CRUD::field('password')->type('text')->label('كلمة المرور');
+        CRUD::field('email')->type('email')->label('البريد الإلكتروني')->attributes(['required' => 'required', 'unique']);
+        CRUD::field('password')->type('password')->label('كلمة المرور');
         CRUD::field('birth_date')->type('date')->label('تاريخ الميلاد');
         CRUD::field('role')->type('select_from_array')->label('الدور')
             ->options(['admin' => 'مدير', 'teacher' => 'مدرس', 'student' => 'طالب']);
