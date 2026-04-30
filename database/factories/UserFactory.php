@@ -19,6 +19,7 @@ class UserFactory extends Factory
 
         return [
             'name' => $role === 'teacher' ? fake()->name() : fake()->name(),
+            'email' => fake()->unique()->safeEmail(),
             'phone' => fake()->unique()->numerify('05########'),
             'password' => static::$password ??= Hash::make('password'),
             'birth_date' => fake()->date('Y-m-d', '-10 years'),

@@ -1,0 +1,131 @@
+/**
+ * Islamic Theme for Ez Al-Deen Quran Memorization Institute
+ * Colors: Emerald Green (#2d8a4a), Gold (#d4af37), Dark Green (#1a5c3a)
+ */
+
+/* Import Arabic font */
+@import url('https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&display=swap');
+
+:root {
+    --primary: #2d8a4a;
+    --primary-dark: #1a5c3a;
+    --secondary: #d4af37;
+    --secondary-dark: #b8941f;
+    --accent: #1a5c3a;
+    --success: #2d8a4a;
+    --info: #17a2b8;
+    --warning: #d4af37;
+    --danger: #dc3545;
+    --light: #f8f9fa;
+    --dark: #2c3e50;
+    --body-bg: #f8f9fa;
+    --card-header-bg: linear-gradient(135deg, #2d8a4a 0%, #1a5c3a 100%);
+}
+
+/* Override Bootstrap colors */
+.bg-primary {
+    background-color: #2d8a4a !important;
+}
+
+.bg-success {
+    background-color: #2d8a4a !important;
+}
+
+.btn-primary {
+    background-color: #2d8a4a;
+    border-color: #2d8a4a;
+}
+
+.btn-primary:hover {
+    background-color: #1a5c3a;
+    border-color: #1a5c3a;
+}
+
+/* Sidebar Islamic styling */
+.sidebar {
+    background: linear-gradient(180deg, #2d8a4a 0%, #1a5c3a 100%);
+}
+
+.sidebar .nav-link.active {
+    background-color: rgba(212, 175, 55, 0.2);
+    border-right: 3px solid #d4af37;
+}
+
+.sidebar .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.1);
+}
+
+/* Card headers */
+.card-header {
+    background: linear-gradient(135deg, #2d8a4a 0%, #1a5c3a 100%);
+    color: #ffffff;
+    border-bottom: 3px solid #d4af37;
+}
+
+/* Table styling */
+.table thead th {
+    background-color: #2d8a4a;
+    color: #ffffff;
+    border-color: #1a5c3a;
+}
+
+.table-striped tbody tr:nth-of-type(odd) {
+    background-color: rgba(45, 138, 74, 0.05);
+}
+
+/* Breadcrumbs */
+.breadcrumb {
+    background-color: #f8f9fa;
+    border-right: 4px solid #2d8a4a;
+}
+
+/* Login page Islamic styling */
+.login-page {
+    background: linear-gradient(135deg, #2d8a4a 0%, #1a5c3a 100%);
+}
+
+.btn-gold {
+    background-color: #d4af37;
+    border-color: #d4af37;
+    color: #2c3e50;
+}
+
+.btn-gold:hover {
+    background-color: #b8941f;
+    border-color: #b8941f;
+    color: #2c3e50;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar-track {
+    background: #f8f9fa;
+}
+
+::-webkit-scrollbar-thumb {
+    background: #2d8a4a;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: #1a5c3a;
+}
+
+/* Arabic font optimization */
+body {
+    font-family: 'Amiri', 'Traditional Arabic', 'Simplified Arabic', serif;
+}
+
+/* Navigation active state */
+.navbar-nav .nav-link.active {
+    color: #d4af37 !important;
+}
+
+/* Badge styling */
+.badge.bg-primary {
+    background-color: #2d8a4a !important;
+}
+
+.badge.bg-warning {
+    background-color: #d4af37 !important;
+    color: #2c3e50;
+}

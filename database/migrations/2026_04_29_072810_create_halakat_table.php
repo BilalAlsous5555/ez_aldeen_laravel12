@@ -17,7 +17,7 @@ return new class extends Migration
             $table->string('notes', 255)->nullable();
             $table->foreignId('teacher_id')
                 ->constrained('users')
-                ->restrictOnDelete();
+                ->cascadeOnDelete();
             $table->timestamps();
         });
     }

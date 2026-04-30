@@ -29,7 +29,7 @@ return new class extends Migration
             // The teacher (or admin) who recorded this entry
             $table->foreignId('recorded_by')
                 ->constrained('users')
-                ->restrictOnDelete();
+                ->cascadeOnDelete();
 
             $table->timestamps();
 
