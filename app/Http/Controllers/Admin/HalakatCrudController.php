@@ -39,7 +39,15 @@ class HalakatCrudController extends CrudController
      */
     protected function setupListOperation()
     {
-        CRUD::setFromDb(); // set columns from db columns.
+        // CRUD::setFromDb(); // set columns from db columns.
+        CRUD::column('name')->label('اسم الحلقة');
+        CRUD::column('notes')->label('ملاحظات عن الحلقة');
+        CRUD::column('teacher')->wrapper([
+            'href' => function($crud,$column,$entry)
+            {
+                return backpack_url('user/'. $entry->id .'/show');
+            }
+        ])->label('اسم المدرس');
 
         /**
          * Columns can be defined using the fluent syntax:
