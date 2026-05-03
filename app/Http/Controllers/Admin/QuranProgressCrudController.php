@@ -39,12 +39,45 @@ class QuranProgressCrudController extends CrudController
      */
     protected function setupListOperation()
     {
-        CRUD::setFromDb(); // set columns from db columns.
+        // CRUD::setFromDb(); // set columns from db columns.
+        CRUD::column('teacher')->wrapper([
+            'href' => function ($crud, $column, $entry) {
+                return backpack_url('user/'.$entry->teacher_id.'/show');
+            },
+        ])->label('اسم المدرس');
 
-        /**
-         * Columns can be defined using the fluent syntax:
-         * - CRUD::column('price')->type('number');
-         */
+        CRUD::column('halqa')->wrapper([
+            'href' => function ($crud, $column, $entry) {
+                return backpack_url('halakat/'.$entry->halakat_id.'/show');
+            },
+        ])->label('اسم الحلقة');
+
+        CRUD::column('student')->wrapper([
+            'href' => function ($crud, $column, $entry) {
+                return backpack_url('user/'.$entry->student_id.'/show');
+            },
+        ])->label('اسم الطالب');
+
+        CRUD::column('surah')->wrapper([
+            'href'=>function($crud,$column,$entry)
+            {
+                return backpack_url('surah/'.$entry->surah_id.'/show');
+            }
+        ])->label('اسم السورة');
+
+        CRUD::column('page')->wrapper([
+            'text'=>function($crud,$column,$entry)
+            {
+                return backpack_url('page/'.$entry->quran_page_number.'/show');
+            }
+        ])->label('رقم الصفحة');
+
+        CRUD::column('from_aya')->label('من الايه');
+        CRUD::column('to_aya')->label('الى الايه');
+        CRUD::column('evaluation')->label('تقييم الحفظ');
+        CRUD::column('notes')->label('ملاحظات المدرسين');
+        // CRUD::column();
+        // CRUD::column();
     }
 
     /**

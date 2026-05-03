@@ -2,11 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Attendance;
-use App\Models\HalakatStudent;
-use App\Models\Note;
-use App\Models\QuranProgress;
-use App\Models\User;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -16,14 +11,15 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Halakat extends Model
 {
     use CrudTrait;
+
     protected $table = 'halakat';
 
-        protected $fillable = [
+    protected $fillable = [
         'name',
         'notes',
         'teacher_id',
     ];
- 
+
     // -------------------------------------------------------------------------
     // Relations
     // -------------------------------------------------------------------------
@@ -70,8 +66,6 @@ class Halakat extends Model
         return $this->hasMany(Attendance::class, 'halakat_id');
     }
 
-
-
     /** Quran progress sessions in this halqa */
     public function progress(): HasMany
     {
@@ -82,5 +76,13 @@ class Halakat extends Model
     public function notes(): HasMany
     {
         return $this->hasMany(Note::class, 'halakat_id');
+    }
+
+    /**
+     * Get the count of active students in this halqa.
+     */
+    public function getActiveStudentsCount()
+    {
+        return $this->activeStudents()->count();
     }
 }

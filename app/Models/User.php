@@ -2,10 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Attendance;
-use App\Models\Halakat;
-use App\Models\HalakatStudent;
-use App\Models\QuranProgress;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -20,7 +16,7 @@ class User extends Authenticatable
     use CrudTrait;
 
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasFactory, Notifiable , HasApiTokens;
+    use HasApiTokens, HasFactory , Notifiable;
 
     /**
      * The attributes that are mass assignable.
@@ -58,7 +54,7 @@ class User extends Authenticatable
             // 'password' => 'hashed',
         ];
     }
-        // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // Role helpers
     // -------------------------------------------------------------------------
 
@@ -93,7 +89,7 @@ class User extends Authenticatable
     /** Attendance records the teacher recorded (as recorder) */
     public function recordedAttendances(): HasMany
     {
-        return $this->hasMany(Attendance::class, 'recorded_by'); // recorded_by is a teacher 
+        return $this->hasMany(Attendance::class, 'recorded_by'); // recorded_by is a teacher
     }
 
     /** Progress sessions this teacher recorded */
@@ -175,7 +171,7 @@ class User extends Authenticatable
         return $this->hasMany(Note::class, 'student_id')
             ->latest();
     }
- 
+
     // -------------------------------------------------------------------------
     // Student profile summary — what each teacher taught this student
     // -------------------------------------------------------------------------
@@ -194,15 +190,15 @@ class User extends Authenticatable
             ->groupBy('teacher_id')
             ->map(function ($sessions, $teacherId) {
                 return [
-                    'teacher'      => $sessions->first()->teacher,
-                    'sessions'     => $sessions->count(),
-                    'pages_count'  => $sessions->unique('quran_page_number')->count(),
-                    'juz_covered'  => $sessions->pluck('page.juz_number')
+                    'teacher' => $sessions->first()->teacher,
+                    'sessions' => $sessions->count(),
+                    'pages_count' => $sessions->unique('quran_page_number')->count(),
+                    'juz_covered' => $sessions->pluck('page.juz_number')
                         ->unique()
                         ->sort()
                         ->values(),
-                    'first_date'   => $sessions->min('date'),
-                    'last_date'    => $sessions->max('date'),
+                    'first_date' => $sessions->min('date'),
+                    'last_date' => $sessions->max('date'),
                 ];
             })
             ->values();
@@ -211,13 +207,28 @@ class User extends Authenticatable
     // Accessor to get arabic role
     public function getArabicRoleAttribute() // invoke by $user->arabic_role
     {
-        $roles =[
+        $roles = [
             'teacher' => 'مدرس',
             'student' => 'طالب',
-            'admin' => 'مدير'
+            'admin' => 'مدير',
         ];
-        return $roles[$this->role] ?? $this->role ;
+
+        return $roles[$this->role] ?? $this->role;
     }
 
+    // Accessor for active halqa name (used in CRUD column)
+    public function getActiveHalqaName()
+    {
+        if ($this->isTeacher()) {
+            return $this->halqa?->name ?? '-';
+        }
 
+        return $this->activeEnrollment?->halqa?->name ?? '-';
+    }
+
+    // Accessor for active halqa teacher name (used in CRUD column)
+    public function getActiveHalqaTeacherName()
+    {
+        return $this->activeEnrollment?->halqa?->teacher?->name ?? '-';
+    }
 }

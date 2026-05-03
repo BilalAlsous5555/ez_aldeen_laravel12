@@ -39,10 +39,10 @@ return new class extends Migration
                 ->on('quran_pages')
                 ->restrictOnDelete();
 
-            $table->unsignedSmallInteger('from_aya');
-            $table->unsignedSmallInteger('to_aya');
+            $table->unsignedSmallInteger('from_aya')->nullable();
+            $table->unsignedSmallInteger('to_aya')->nullable();
 
-            $table->enum('evaluation', ['excellent', 'good', 'average', 'weak'])->nullable();
+            $table->enum('evaluation', ['ممتاز', 'جيد جدا', 'جيد', 'اعادة'])->nullable();
             $table->string('notes', 255)->nullable();
 
             $table->date('date');

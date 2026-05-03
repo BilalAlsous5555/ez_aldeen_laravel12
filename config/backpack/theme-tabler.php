@@ -45,7 +45,7 @@ return [
         // base_path('vendor/backpack/theme-tabler/resources/assets/css/skins/vertical-lines-background.css'),
         // base_path('vendor/backpack/theme-tabler/resources/assets/css/skins/pinstripe-background.css'),
         // base_path('vendor/backpack/theme-tabler/resources/assets/css/skins/paper-background.css'),
-        public_path('/public/css/islamic-theme.css'),
+        public_path('css/islamic-theme.css'),
     ],
 
     /**

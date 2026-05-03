@@ -41,19 +41,18 @@ class UserCrudController extends CrudController
     protected function setupListOperation()
     {
 
-    /**
-     * 1- ADD columns
-     * 2- Reorder
-     * 3- Display image CRUD::column('image')->type('image');
-     * 4- add links 
-     * 5- wrappers
-     * 6- Actions as dropdown button
-     * 7- Custom column
-     * 8- Filters
-     * 9- Export buttons
-     * 10- Details row
-     * 
-     */
+        /**
+         * 1- ADD columns
+         * 2- Reorder
+         * 3- Display image CRUD::column('image')->type('image');
+         * 4- add links
+         * 5- wrappers
+         * 6- Actions as dropdown button
+         * 7- Custom column
+         * 8- Filters
+         * 9- Export buttons
+         * 10- Details row
+         */
         // Role column with search for Arabic and English
         CRUD::column('arabic_role')->type('text')->label('الدور')->searchLogic(function ($query, $column, $searchTerm) {
             $arabicToEnglish = [
@@ -67,26 +66,56 @@ class UserCrudController extends CrudController
                 $query->orWhere('role', 'like', '%'.$searchTerm.'%');
             }
         });
+
         // Name column with search
         CRUD::column('name')->type('text')->label('الاسم')->searchLogic(function ($query, $column, $searchTerm) {
             $query->orWhere('name', 'like', '%'.$searchTerm.'%');
         });
 
+        CRUD::column('activeEnrollment')
+            ->type('model_function')
+            ->function_name('getActiveHalqaName')
+            ->label('الحلقة الحالية')
+            ->wrapper([
+                'href' => function ($crud, $column, $entry) {
+                    if ($entry->isTeacher() && $entry->halqa) {
+                        return backpack_url('halakat/'.$entry->halqa->id.'/show');
+                    }
 
+                    if ($entry->activeEnrollment) {
+                        return backpack_url('halakat/'.$entry->activeEnrollment->halakat_id.'/show');
+                    }
+
+                    return null;
+                },
+            ]);
+
+        CRUD::column('activeHalqaTeacher')
+            ->type('model_function')
+            ->function_name('getActiveHalqaTeacherName')
+            ->label('المدرس')
+            ->wrapper([
+                'href' => function ($crud, $column, $entry) {
+                    if ($entry->activeEnrollment?->halqa?->teacher_id) {
+                        return backpack_url('user/'.$entry->activeEnrollment->halqa->teacher_id.'/show');
+                    }
+
+                    return null;
+                },
+            ]);
         // Other columns with search
         CRUD::column('phone')->type('text')->label('رقم الهاتف')->searchLogic(function ($query, $column, $searchTerm) {
             $query->orWhere('phone', 'like', '%'.$searchTerm.'%');
         });
-
-        CRUD::column('email')->type('email')->label('البريد الإلكتروني')->searchLogic(function ($query, $column, $searchTerm) {
-            $query->orWhere('email', 'like', '%'.$searchTerm.'%');
-        });
-        CRUD::column('password')->type('text')->label('كلمة المرور');
-
         CRUD::column('birth_date')->type('date')->label('تاريخ الولادة');
         CRUD::column('created_at')->type('date')->label('تاريخ الانضمام');
+        
+        CRUD::column('email')->type('email')->label('البريد الإلكتروني')->searchLogic(function ($query, $column, $searchTerm) {
+            $query->orWhere('email', 'like', '%'.$searchTerm.'%');
+            });
+        CRUD::column('password')->type('string')->label('كلمة المرور');
 
-        CRUD::column('HalakatStudent');
+
     }
 
     /**
