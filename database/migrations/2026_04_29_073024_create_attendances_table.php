@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
 
             $table->date('attendance_date');
-            $table->enum('status', ['present', 'absent']);
+            $table->enum('status', ['حاضر', 'غائب']);
             $table->string('excused_reason', 255)->nullable();
 
             $table->foreignId('student_id')

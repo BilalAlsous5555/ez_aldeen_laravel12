@@ -30,7 +30,7 @@ class UserRequest extends FormRequest
             'name' => 'required|string|max:45',
             'email' => 'required|string|email|max:45|unique:users,email,'.$id,
             'phone' => 'required|string|min:10|max:10|unique:users,phone,'.$id,
-            'password' => 'nullable|string|min:6',
+            'password' => 'required|string|min:6',
             'birth_date' => 'nullable|date',
             'role' => 'required|in:admin,teacher,student',
         ];

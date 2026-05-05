@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\UserRequest;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
+use Backpack\CRUD\app\Library\CrudPanel\CrudPanel;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
 
 /**
@@ -109,12 +110,11 @@ class UserCrudController extends CrudController
         });
         CRUD::column('birth_date')->type('date')->label('تاريخ الولادة');
         CRUD::column('created_at')->type('date')->label('تاريخ الانضمام');
-        
+
         CRUD::column('email')->type('email')->label('البريد الإلكتروني')->searchLogic(function ($query, $column, $searchTerm) {
             $query->orWhere('email', 'like', '%'.$searchTerm.'%');
-            });
+        });
         CRUD::column('password')->type('string')->label('كلمة المرور');
-
 
     }
 
@@ -137,6 +137,14 @@ class UserCrudController extends CrudController
         CRUD::field('birth_date')->type('date')->label('تاريخ الميلاد');
         CRUD::field('role')->type('select_from_array')->label('الدور')
             ->options(['admin' => 'مدير', 'teacher' => 'مدرس', 'student' => 'طالب']);
+
+        // Field to assign student to a halaka
+        CRUD::field('assign_halakat')
+            ->type('select_from_array')
+            ->label('الحلقة')
+            ->options(\App\Models\Halakat::pluck('name', 'id')->toArray())
+            ->fake(true)
+            ->hint('اختر الحلقة للطالب');
     }
 
     /**
@@ -158,5 +166,12 @@ class UserCrudController extends CrudController
         CRUD::field('birth_date')->type('date')->label('تاريخ الميلاد');
         CRUD::field('role')->type('select_from_array')->label('الدور')
             ->options(['admin' => 'مدير', 'teacher' => 'مدرس', 'student' => 'طالب']);
+        // // Field to assign student to a halaka
+        // CRUD::field('assign_halakat')
+        //     ->type('select_from_array')
+        //     ->label('الحلقة')
+        //     ->options(\App\Models\Halakat::pluck('name', 'id')->toArray())
+        //     ->fake(true)
+        //     ->hint('اختر الحلقة للطالب');
     }
 }
