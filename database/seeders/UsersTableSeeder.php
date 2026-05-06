@@ -22,8 +22,8 @@ class UsersTableSeeder extends Seeder
 
         // Teachers (10 rows)
         $teachers = [
-            ['name' => 'أحمد محمد', 'email' => 'ahmed@example.com', 'phone' => '0500000001', 'birth_date' => '1985-05-15'],
-            ['name' => 'فاطمة علي', 'email' => 'fatima@example.com', 'phone' => '0500000002', 'birth_date' => '1990-08-20'],
+            ['name' => 'أحمد محمد', 'email' => 'ahmed@example.com', 'phone' => '0997176570', 'birth_date' => '1985-05-15'],
+            ['name' => 'فاطمة علي', 'email' => 'fatima@example.com', 'phone' => '0933967587', 'birth_date' => '1990-08-20'],
             ['name' => 'خالد عبدالله', 'email' => 'khaled@example.com', 'phone' => '0500000003', 'birth_date' => '1988-12-10'],
             ['name' => 'عمر حسن', 'email' => 'omar@example.com', 'phone' => '0500000004', 'birth_date' => '1992-03-25'],
             ['name' => 'سارة أحمد', 'email' => 'sara@example.com', 'phone' => '0500000005', 'birth_date' => '1991-07-18'],
