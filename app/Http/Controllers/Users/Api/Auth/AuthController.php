@@ -15,7 +15,7 @@ class AuthController extends Controller
     {
         if(!Auth::attempt($request->validated()))
         {
-            return response()->json(['message'=>'Invalid email or password']);
+            return response()->json(['message'=>'Invalid email or password'] ,401 );
         }
         else
         {
@@ -25,7 +25,7 @@ class AuthController extends Controller
                 'message'=>'User Loged in successfully ! ',
                 'token' => $token ,
                 'user' => $user ,
-            ]);
+            ],201);
         }
     }
 

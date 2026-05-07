@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Requests\UserRequest;
+use App\Models\Halakat;
+use App\Models\HalakatStudent;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanel;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
@@ -111,11 +113,6 @@ class UserCrudController extends CrudController
         CRUD::column('birth_date')->type('date')->label('تاريخ الولادة');
         CRUD::column('created_at')->type('date')->label('تاريخ الانضمام');
 
-        CRUD::column('email')->type('email')->label('البريد الإلكتروني')->searchLogic(function ($query, $column, $searchTerm) {
-            $query->orWhere('email', 'like', '%'.$searchTerm.'%');
-        });
-        CRUD::column('password')->type('string')->label('كلمة المرور');
-
     }
 
     /**
@@ -129,22 +126,102 @@ class UserCrudController extends CrudController
     {
         CRUD::setValidation(UserRequest::class);
 
-        // Add fields for your User model
         CRUD::field('name')->type('text')->label('الاسم');
         CRUD::field('phone')->type('text')->label('رقم الهاتف')->attributes(['required' => 'required', 'maxlength' => '10', 'minlength' => '10']);
         CRUD::field('email')->type('email')->label('البريد الإلكتروني')->attributes(['required' => 'required', 'unique']);
         CRUD::field('password')->type('password')->label('كلمة المرور');
         CRUD::field('birth_date')->type('date')->label('تاريخ الميلاد');
         CRUD::field('role')->type('select_from_array')->label('الدور')
-            ->options(['admin' => 'مدير', 'teacher' => 'مدرس', 'student' => 'طالب']);
+            ->options(['teacher' => 'مدرس', 'student' => 'طالب']);
 
-        // Field to assign student to a halaka
-        CRUD::field('assign_halakat')
+        CRUD::field('selected_halaka')
             ->type('select_from_array')
             ->label('الحلقة')
-            ->options(\App\Models\Halakat::pluck('name', 'id')->toArray())
+            ->options(Halakat::pluck('name', 'id')->toArray())
             ->fake(true)
-            ->hint('اختر الحلقة للطالب');
+            ->hint('اختر الحلقة')
+            ->wrapper(['id' => 'assign_halakat_wrapper']);
+
+        CRUD::setOperationSetting('extra_scripts', [asset('js/role-halakat-filter.js')]);
+    }
+
+    public function store()
+    {
+        $this->crud->hasAccessOrFail('create');
+        $request = $this->crud->validateRequest();
+        $halakatId = $request->input('selected_halaka');
+        $role = $request->input('role');
+
+        $data = $request->only(['name', 'phone', 'email', 'password', 'birth_date', 'role']);
+
+        $item = \App\Models\User::create($data);
+
+        if ($halakatId && $role === 'student') {
+            HalakatStudent::create([
+                'student_id' => $item->id,
+                'halakat_id' => $halakatId,
+                'joined_at' => now(),
+                'is_active' => true,
+            ]);
+        } elseif ($halakatId && $role === 'teacher') {
+            Halakat::where('id', $halakatId)->update(['teacher_id' => $item->id]);
+        }
+
+
+        return $this->performSaveActionRedirect($item);
+    }
+
+    private function performSaveActionRedirect($item)
+    {
+        $saveAction = $this->crud->getSaveAction();
+
+        if ($saveAction === 'save_and_new') {
+            return redirect($this->crud->route.'/create');
+        }
+
+        if ($saveAction === 'save_and_edit') {
+            return redirect($this->crud->route.'/'.$item->getKey().'/edit');
+        }
+
+        return redirect($this->crud->route);
+    }
+
+    public function update()
+    {
+        $this->crud->hasAccessOrFail('update');
+        $request = $this->crud->validateRequest();
+        $user = $this->crud->getCurrentEntry();
+
+        $halakatId = $request->input('selected_halaka');
+        $role = $request->input('role') ?? $user->role;
+
+        $data = $request->only(['name', 'phone', 'email', 'birth_date', 'role']);
+
+        if (! empty($request->input('password'))) {
+            $data['password'] = $request->input('password');
+        }
+
+        $user->fill($data)->save();
+
+        if ($role === 'student' && $halakatId) {
+            $currentHalakatId = $user->fresh()->activeEnrollment?->halakat_id;
+
+            if ($halakatId != $currentHalakatId) {
+                HalakatStudent::transfer($user->id, $halakatId, now()->toDateString());
+            }
+        } elseif ($role === 'teacher' && $halakatId) {
+            $currentHalakatId = $user->fresh()->halqa?->id;
+
+            if ($halakatId != $currentHalakatId) {
+                if ($user->halqa) {
+                    $user->halqa->update(['teacher_id' => null]);
+                }
+                Halakat::where('id', $halakatId)->update(['teacher_id' => $user->id]);
+            }
+        }
+
+
+        return $this->performSaveActionRedirect($user);
     }
 
     /**
@@ -158,20 +235,34 @@ class UserCrudController extends CrudController
     {
         CRUD::setValidation(UserRequest::class);
 
-        // Add fields for your User model
         CRUD::field('name')->type('text')->label('الاسم');
         CRUD::field('email')->type('email')->label('البريد الإلكتروني');
         CRUD::field('phone')->type('text')->label('رقم الهاتف')->attributes(['required' => 'required', 'maxlength' => '10', 'minlength' => '10']);
         CRUD::field('password')->type('password')->label('كلمة المرور')->hint('اتركه فارغاً إذا لم ترد تغييره');
         CRUD::field('birth_date')->type('date')->label('تاريخ الميلاد');
         CRUD::field('role')->type('select_from_array')->label('الدور')
-            ->options(['admin' => 'مدير', 'teacher' => 'مدرس', 'student' => 'طالب']);
-        // // Field to assign student to a halaka
-        // CRUD::field('assign_halakat')
-        //     ->type('select_from_array')
-        //     ->label('الحلقة')
-        //     ->options(\App\Models\Halakat::pluck('name', 'id')->toArray())
-        //     ->fake(true)
-        //     ->hint('اختر الحلقة للطالب');
+            ->options(['teacher' => 'مدرس', 'student' => 'طالب']);
+
+        // Show halakat field for students and teachers only
+        $entry = $this->crud->getCurrentEntry();
+        if ($entry && ($entry->isStudent() || $entry->isTeacher())) {
+            $currentHalakatId = null;
+            if ($entry->isStudent()) {
+                $currentHalakatId = $entry->activeEnrollment?->halakat_id;
+            } else {
+                $currentHalakatId = $entry->halqa?->id;
+            }
+
+            CRUD::field('selected_halaka')
+                ->type('select_from_array')
+                ->label('الحلقة')
+                ->options(Halakat::pluck('name', 'id')->toArray())
+                ->value($currentHalakatId)
+                ->fake(true)
+                ->hint('اختر حلقة جديدة لنقل الطالب إليها')
+                ->wrapper(['id' => 'assign_halakat_wrapper']);
+
+            CRUD::setOperationSetting('extra_scripts', [asset('js/role-halakat-filter.js')]);
+        }
     }
 }

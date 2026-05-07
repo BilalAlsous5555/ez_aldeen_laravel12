@@ -42,7 +42,6 @@ class HalakatCrudController extends CrudController
     {
         // CRUD::setFromDb(); // set columns from db columns.
         CRUD::column('name')->label('اسم الحلقة');
-        CRUD::column('notes')->label('ملاحظات عن الحلقة');
         CRUD::column('teacher')->wrapper([
             'href' => function ($crud, $column, $entry) {
                 return backpack_url('user/'.$entry->teacher_id.'/show');
@@ -53,6 +52,7 @@ class HalakatCrudController extends CrudController
             ->type('model_function')
             ->function_name('getActiveStudentsCount')
             ->label('عدد الطلاب');
+        CRUD::column('notes')->label('ملاحظات عن الحلقة');
 
         /**
          * Columns can be defined using the fluent syntax:
@@ -70,7 +70,9 @@ class HalakatCrudController extends CrudController
     protected function setupCreateOperation()
     {
         CRUD::setValidation(HalakatRequest::class);
-        CRUD::setFromDb(); // set fields from db columns.
+        // CRUD::setFromDb(); // set fields from db columns.
+        CRUD::field('name')->label('اسم الحلقة');
+        CRUD::field('notes')->label('ملاحظات عن الحلقة');
 
         /**
          * Fields can be defined using the fluent syntax:
@@ -88,5 +90,48 @@ class HalakatCrudController extends CrudController
     protected function setupUpdateOperation()
     {
         $this->setupCreateOperation();
+    }
+
+    public function store()
+    {
+        $this->crud->hasAccessOrFail('create');
+        $this->crud->validateRequest();
+
+        $data = $this->crud->getRequest()->only(['name', 'notes']);
+
+        $item = \App\Models\Halakat::create($data);
+
+
+        $saveAction = $this->crud->getSaveAction();
+        if ($saveAction === 'save_and_new') {
+            return redirect($this->crud->route.'/create');
+        }
+        if ($saveAction === 'save_and_edit') {
+            return redirect($this->crud->route.'/'.$item->getKey().'/edit');
+        }
+
+        return redirect($this->crud->route);
+    }
+
+    public function update()
+    {
+        $this->crud->hasAccessOrFail('update');
+        $this->crud->validateRequest();
+        $item = $this->crud->getCurrentEntry();
+
+        $data = $this->crud->getRequest()->only(['name', 'notes']);
+
+        $item->fill($data)->save();
+
+
+        $saveAction = $this->crud->getSaveAction();
+        if ($saveAction === 'save_and_new') {
+            return redirect($this->crud->route.'/create');
+        }
+        if ($saveAction === 'save_and_edit') {
+            return redirect($this->crud->route.'/'.$item->getKey().'/edit');
+        }
+
+        return redirect($this->crud->route);
     }
 }

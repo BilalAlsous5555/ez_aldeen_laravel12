@@ -26,14 +26,22 @@ class UserRequest extends FormRequest
     {
         $id = $this->get('id') ?? request()->route('id');
 
-        return [
+        $rules = [
             'name' => 'required|string|max:45',
             'email' => 'required|string|email|max:45|unique:users,email,'.$id,
             'phone' => 'required|string|min:10|max:10|unique:users,phone,'.$id,
-            'password' => 'required|string|min:6',
             'birth_date' => 'nullable|date',
             'role' => 'required|in:admin,teacher,student',
+            'assign_halakat' => 'nullable|exists:halakat,id',
         ];
+
+        if ($this->isMethod('post')) {
+            $rules['password'] = 'required|string|min:6';
+        } else {
+            $rules['password'] = 'nullable|string|min:6';
+        }
+
+        return $rules;
     }
 
     /**

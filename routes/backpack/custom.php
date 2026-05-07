@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Admin\AccountCrudController;
 use App\Http\Controllers\Admin\UserCrudController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,7 +19,19 @@ Route::group([
     'namespace' => 'App\Http\Controllers\Admin',
 ], function () { // custom admin routes
     Route::crud('user', UserCrudController::class);
+    Route::crud('accounts', AccountCrudController::class);
     Route::crud('halakat', 'HalakatCrudController');
+    Route::get('halakat/by-role', function (\Illuminate\Http\Request $request) {
+        $role = $request->input('role');
+
+        if ($role === 'teacher') {
+            $halakat = \App\Models\Halakat::whereNull('teacher_id')->get(['id', 'name']);
+        } else {
+            $halakat = \App\Models\Halakat::get(['id', 'name']);
+        }
+
+        return response()->json($halakat->pluck('name', 'id'));
+    })->name('halakat.byRole');
     Route::crud('quran-progress', 'QuranProgressCrudController');
     Route::crud('attendance', 'AttendanceCrudController');
     Route::crud('note', 'NoteCrudController');
