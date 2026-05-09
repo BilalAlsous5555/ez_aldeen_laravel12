@@ -13,23 +13,29 @@ class Note extends Model
     use CrudTrait;
     protected $table = 'notes';
 
-        protected $fillable = [
+    protected $fillable = [
         'student_id',
         'sender_id',
         'halakat_id',
         'content',
     ];
 
+    /**
+     * [NEW] withTrashed على student و sender
+     * الملاحظة تبقى في ملف الطالب حتى بعد حذفه
+     * وتبقى منسوبة للمدرس الذي أرسلها حتى بعد نقله أو حذفه
+     */
     public function student(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'student_id');
+        return $this->belongsTo(User::class, 'student_id')->withTrashed();
     }
 
     public function sender(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'sender_id');
+        return $this->belongsTo(User::class, 'sender_id')->withTrashed();
     }
 
+    // halakat_id قد يصبح null إذا حُذفت الحلقة — [NO CHANGE]
     public function halqa(): BelongsTo
     {
         return $this->belongsTo(Halakat::class, 'halakat_id');

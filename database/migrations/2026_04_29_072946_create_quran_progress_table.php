@@ -17,11 +17,11 @@ return new class extends Migration
 
             $table->foreignId('student_id')
                 ->constrained('users')
-                ->cascadeOnDelete();
+                ->restrictOnDelete();
 
             $table->foreignId('halakat_id')
                 ->constrained('halakat')
-                ->cascadeOnDelete();
+                ->restrictOnDelete();
 
             // teacher_id kept for historical tracking
             // (shows which teacher recorded this progress session)
@@ -44,7 +44,7 @@ return new class extends Migration
 
             $table->enum('evaluation', ['ممتاز', 'جيد جدا', 'جيد', 'اعادة'])->nullable();
             $table->string('notes', 255)->nullable();
-
+            
             $table->date('date');
             $table->timestamps();
 

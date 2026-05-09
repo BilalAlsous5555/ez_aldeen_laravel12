@@ -13,7 +13,7 @@ class Attendance extends Model
     use CrudTrait;
     protected $table = 'attendances';
 
-        protected $fillable = [
+    protected $fillable = [
         'attendance_date',
         'status',
         'excused_reason',
@@ -29,9 +29,12 @@ class Attendance extends Model
         ];
     }
 
+    /**
+     * [NEW] withTrashed — الطالب قد يكون محذوفاً لكن سجلاته تبقى
+     */
     public function student(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'student_id');
+        return $this->belongsTo(User::class, 'student_id')->withTrashed();
     }
 
     public function halqa(): BelongsTo
@@ -39,8 +42,11 @@ class Attendance extends Model
         return $this->belongsTo(Halakat::class, 'halakat_id');
     }
 
+    /**
+     * [NEW] withTrashed — المدرس الذي سجّل الحضور قد يكون انتقل أو حُذف
+     */
     public function recorder(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'recorded_by');
+        return $this->belongsTo(User::class, 'recorded_by')->withTrashed();
     }
 }

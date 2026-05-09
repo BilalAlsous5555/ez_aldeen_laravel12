@@ -16,14 +16,16 @@ return new class extends Migration
             //recever
             $table->foreignId('student_id')
                 ->constrained('users')
-                ->cascadeOnDelete();
+                ->restrictOnDelete();
 
             // sender = teacher or admin
             $table->foreignId('sender_id')
                 ->constrained('users')
-                ->cascadeOnDelete();
+                ->restrictOnDelete();
 
             // Optional: link note to a specific halqa context
+                    // [NO CHANGE] nullable — الملاحظة قد تكون من الإدارة مباشرة
+            // وعند حذف الحلقة تصبح null لكن الملاحظة تبقى
             $table->foreignId('halakat_id')
                 ->nullable()
                 ->constrained('halakat')

@@ -23,9 +23,16 @@ Route::group([
     Route::crud('halakat', 'HalakatCrudController');
     Route::get('halakat/by-role', function (\Illuminate\Http\Request $request) {
         $role = $request->input('role');
+        $currentHalaka = $request->input('currentHalaka');
 
         if ($role === 'teacher') {
-            $halakat = \App\Models\Halakat::whereNull('teacher_id')->get(['id', 'name']);
+            $query = \App\Models\Halakat::whereNull('teacher_id');
+
+            if ($currentHalaka) {
+                $query->orWhere('id', $currentHalaka);
+            }
+
+            $halakat = $query->get(['id', 'name']);
         } else {
             $halakat = \App\Models\Halakat::get(['id', 'name']);
         }

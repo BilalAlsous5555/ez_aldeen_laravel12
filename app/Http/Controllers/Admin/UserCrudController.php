@@ -137,12 +137,16 @@ class UserCrudController extends CrudController
         CRUD::field('selected_halaka')
             ->type('select_from_array')
             ->label('الحلقة')
-            ->options(Halakat::pluck('name', 'id')->toArray())
+            ->options([])
+            ->attributes(['data-current-halaka' => ''])
             ->fake(true)
             ->hint('اختر الحلقة')
             ->wrapper(['id' => 'assign_halakat_wrapper']);
 
-        CRUD::setOperationSetting('extra_scripts', [asset('js/role-halakat-filter.js')]);
+        CRUD::field('halakat_filter_script')
+            ->type('view')
+            ->view('vendor.backpack.ui.fields.role-halakat-script')
+            ->fake(true);
     }
 
     public function store()
@@ -166,7 +170,6 @@ class UserCrudController extends CrudController
         } elseif ($halakatId && $role === 'teacher') {
             Halakat::where('id', $halakatId)->update(['teacher_id' => $item->id]);
         }
-
 
         return $this->performSaveActionRedirect($item);
     }
@@ -220,7 +223,6 @@ class UserCrudController extends CrudController
             }
         }
 
-
         return $this->performSaveActionRedirect($user);
     }
 
@@ -256,13 +258,17 @@ class UserCrudController extends CrudController
             CRUD::field('selected_halaka')
                 ->type('select_from_array')
                 ->label('الحلقة')
-                ->options(Halakat::pluck('name', 'id')->toArray())
+                ->options([])
+                ->attributes(['data-current-halaka' => $currentHalakatId ?? ''])
                 ->value($currentHalakatId)
                 ->fake(true)
-                ->hint('اختر حلقة جديدة لنقل الطالب إليها')
+                ->hint($entry->isTeacher() ? 'اختر حلقة جديدة لنقل المدرس إليها' : 'اختر حلقة جديدة لنقل الطالب إليها')
                 ->wrapper(['id' => 'assign_halakat_wrapper']);
 
-            CRUD::setOperationSetting('extra_scripts', [asset('js/role-halakat-filter.js')]);
+            CRUD::field('halakat_filter_script')
+                ->type('view')
+                ->view('vendor.backpack.ui.fields.role-halakat-script')
+                ->fake(true);
         }
     }
 }

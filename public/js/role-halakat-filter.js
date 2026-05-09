@@ -1,39 +1,64 @@
 document.addEventListener('DOMContentLoaded', function() {
-    const roleField = document.querySelector('[name="role"]');
-    const halakaField = document.querySelector('[name="selected_halaka"]');
-    const halakaWrapper = document.getElementById('assign_halakat_wrapper');
+    var roleField = document.querySelector('[name="role"]');
+    var halakaField = document.querySelector('[name="selected_halaka"]');
+    var halakaWrapper = document.getElementById('assign_halakat_wrapper');
 
     if (!roleField || !halakaField) return;
 
     function updateHalakatOptions() {
-        const role = roleField.value;
+        var role = roleField.value;
 
         if (role === 'student' || role === 'teacher') {
             if (halakaWrapper) halakaWrapper.style.display = '';
         } else {
             if (halakaWrapper) halakaWrapper.style.display = 'none';
-            halakaField.value = '';
+            halakaField.innerHTML = '';
             return;
         }
 
-        fetch('/admin/halakat/by-role?role=' + role)
-            .then(function(res) { return res.json(); })
+        halakaField.innerHTML = '<option>جاري التحميل...</option>';
+        halakaField.disabled = true;
+
+        var currentHalaka = halakaField.getAttribute('data-current-halaka') || '';
+        var url = '/admin/halakat/by-role?role=' + role + '&currentHalaka=' + currentHalaka;
+
+        fetch(url)
+            .then(function(res) {
+                if (!res.ok) throw new Error('Network error');
+                return res.json();
+            })
             .then(function(data) {
-                const currentVal = halakaField.value;
                 halakaField.innerHTML = '';
 
-                Object.entries(data).forEach(function(entry) {
-                    var id = entry[0];
-                    var name = entry[1];
-                    var opt = document.createElement('option');
-                    opt.value = id;
-                    opt.textContent = name;
-                    if (id === currentVal) { opt.selected = true; }
-                    halakaField.appendChild(opt);
-                });
+                var entries = Object.entries(data);
+                if (entries.length === 0) {
+                    var emptyOpt = document.createElement('option');
+                    emptyOpt.value = '';
+                    emptyOpt.textContent = role === 'teacher' ? 'لا توجد حلقات متاحة' : 'لا توجد حلقات';
+                    halakaField.appendChild(emptyOpt);
+                } else {
+                    entries.forEach(function(entry) {
+                        var id = entry[0];
+                        var name = entry[1];
+                        var opt = document.createElement('option');
+                        opt.value = id;
+                        opt.textContent = name;
+                        if (id === currentHalaka) {
+                            opt.selected = true;
+                        }
+                        halakaField.appendChild(opt);
+                    });
+                }
+
+                halakaField.disabled = false;
+            })
+            .catch(function() {
+                halakaField.innerHTML = '<option value="">خطأ في التحميل</option>';
+                halakaField.disabled = false;
             });
     }
 
     roleField.addEventListener('change', updateHalakatOptions);
+
     updateHalakatOptions();
 });

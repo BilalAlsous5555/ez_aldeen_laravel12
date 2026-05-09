@@ -29,35 +29,37 @@ class Halakat extends Model
      */
     public function teacher(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'teacher_id');
+        return $this->belongsTo(User::class, 'teacher_id')->withTrashed();
     }
 
-    /**
-     * All enrollment rows (including historical).
-     */
-    public function enrollments(): HasMany
-    {
-        return $this->hasMany(HalakatStudent::class, 'halakat_id');
-    }
+    // /**
+    //  * All enrollment rows (including historical).
+    //  */
+    // public function enrollments(): HasMany
+    // {
+    //     return $this->hasMany(HalakatStudent::class, 'halakat_id');
+    // }
 
     /**
-     * Currently active students.
+     * الطلاب النشطون غير المحذوفين — للعدّ والقوائم الرسمية
      */
     public function activeStudents(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'halakat_students', 'halakat_id', 'student_id')
             ->withPivot(['joined_at', 'left_at', 'is_active'])
             ->wherePivot('is_active', true);
+        // بدون withTrashed() → يستثني المحذوفين تلقائياً
     }
 
     /**
-     * All students ever enrolled (including transferred-out).
+     * كل الطلاب التاريخيين شاملاً المحذوفين — لملف الطالب والإحصائيات التاريخية
      */
     public function allStudents(): BelongsToMany
     {
         return $this->belongsToMany(User::class, 'halakat_students', 'halakat_id', 'student_id')
             ->withPivot(['joined_at', 'left_at', 'is_active'])
-            ->orderByPivot('joined_at');
+            ->orderByPivot('joined_at')
+            ->withTrashed(); // يشمل المحذوفين للتاريخ فقط
     }
 
     /** Student attendance records for this halqa */

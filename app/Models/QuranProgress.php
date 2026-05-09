@@ -14,7 +14,7 @@ class QuranProgress extends Model
 {
     use CrudTrait;
     protected $table = 'quran_progress';
-        protected $fillable = [
+    protected $fillable = [
         'student_id',
         'halakat_id',
         'teacher_id',
@@ -40,14 +40,19 @@ class QuranProgress extends Model
     // Relations
     // -------------------------------------------------------------------------
 
+    /**
+     * [NEW] withTrashed على student و teacher
+     * السبب: سجلات التقدم تبقى حتى بعد حذف الطالب أو نقل المدرس
+     *        ويجب عرض اسميهما في ملف الطالب وإحصائيات المعهد
+     */
     public function student(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'student_id');
+        return $this->belongsTo(User::class, 'student_id')->withTrashed();
     }
 
     public function teacher(): BelongsTo
     {
-        return $this->belongsTo(User::class, 'teacher_id');
+        return $this->belongsTo(User::class, 'teacher_id')->withTrashed();
     }
 
     public function halqa(): BelongsTo
@@ -64,12 +69,7 @@ class QuranProgress extends Model
     {
         return $this->belongsTo(QuranPage::class, 'quran_page_number', 'page_number');
     }
- 
-    // -------------------------------------------------------------------------
-    // Helpers
-    // -------------------------------------------------------------------------
 
-    /** Number of ayat memorized in this session */
     public function ayatCount(): int
     {
         return $this->to_aya - $this->from_aya + 1;

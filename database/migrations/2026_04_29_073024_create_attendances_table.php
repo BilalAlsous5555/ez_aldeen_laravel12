@@ -20,20 +20,21 @@ return new class extends Migration
 
             $table->foreignId('student_id')
                 ->constrained('users')
-                ->cascadeOnDelete();
+                ->restrictOnDelete();
 
             $table->foreignId('halakat_id')
                 ->constrained('halakat')
-                ->cascadeOnDelete();
+                ->restrictOnDelete();
 
             // The teacher (or admin) who recorded this entry
             $table->foreignId('recorded_by')
                 ->constrained('users')
-                ->cascadeOnDelete();
+                ->restrictOnDelete();
 
             $table->timestamps();
 
             // One attendance record per student per halqa per day
+               // طالب واحد لا يمكن تسجيل حضوره مرتين في نفس الحلقة نفس اليوم
             $table->unique(['student_id', 'halakat_id', 'attendance_date'], 'unique_student_attendance');
 
             $table->index(['halakat_id', 'attendance_date']);

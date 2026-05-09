@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
@@ -16,7 +17,7 @@ class User extends Authenticatable
     use CrudTrait;
 
     /** @use HasFactory<\Database\Factories\UserFactory> */
-    use HasApiTokens, HasFactory , Notifiable;
+    use HasApiTokens, HasFactory, Notifiable, SoftDeletes;
 
     /**
      * The attributes that are mass assignable.
@@ -93,6 +94,8 @@ class User extends Authenticatable
     }
 
     /** Progress sessions this teacher recorded */
+
+    /** جلسات التقدم القرآني التي سجّلها هذا المدرس */
     public function taughtProgress(): HasMany
     {
         return $this->hasMany(QuranProgress::class, 'teacher_id');
@@ -104,12 +107,43 @@ class User extends Authenticatable
         return $this->hasMany(Note::class, 'sender_id');
     }
 
+
+       // -------------------------------------------------------------------------
+    // TEACHER — نقل المدرس لحلقة أخرى
+    // -------------------------------------------------------------------------
+
+    /**
+     * [NEW] نقل المدرس من حلقته الحالية إلى حلقة جديدة.
+     *
+     * الخطوات:
+     * 1. تعيين teacher_id = null في الحلقة القديمة (تصبح بدون مدرس)
+     * 2. تعيين teacher_id = this->id في الحلقة الجديدة
+     *
+     * ملاحظة: UNIQUE على teacher_id يمنع ربط مدرس بأكثر من حلقة
+     *
+     * @param int $newHalakatId
+     */
+    public function transferToHalqa(int $newHalakatId): void
+    {
+        // 1. تفريغ الحلقة القديمة من هذا المدرس
+        Halakat::where('teacher_id', $this->id)
+            ->update(['teacher_id' => null]);
+
+        // 2. ربط المدرس بالحلقة الجديدة
+        Halakat::where('id', $newHalakatId)
+            ->update(['teacher_id' => $this->id]);
+    }
+
     // -------------------------------------------------------------------------
     // STUDENT relations
     // -------------------------------------------------------------------------
 
     /**
      * All halakat enrollments (including historical/transferred ones).
+     */
+    /**
+     * كل سجلات انتماء الطالب للحلقات (الحالية والتاريخية).
+     * [NO CHANGE] — هذه السجلات لا تُحذف حتى بعد soft delete للطالب
      */
     public function enrollments(): HasMany
     {
@@ -119,11 +153,14 @@ class User extends Authenticatable
     /**
      * Current active halqa the student belongs to.
      */
+        /**
+     * الحلقة الحالية للطالب فقط.
+     * [NO CHANGE] — دائماً صف واحد is_active = true لكل طالب
+     */
     public function activeEnrollment(): HasOne
     {
         return $this->hasOne(HalakatStudent::class, 'student_id')
-            ->where('is_active', true)
-            ->latestOfMany('joined_at');
+            ->where('is_active', true);
     }
 
     /**
@@ -137,6 +174,7 @@ class User extends Authenticatable
     }
 
     /** Student's Quran progress records */
+    /** كل سجلات التقدم القرآني للطالب */
     public function progress(): HasMany
     {
         return $this->hasMany(QuranProgress::class, 'student_id');
@@ -152,14 +190,15 @@ class User extends Authenticatable
      *           ->get()
      *           ->groupBy('teacher_id');
      */
-    public function progressByTeacher(): HasMany
-    {
-        return $this->hasMany(QuranProgress::class, 'student_id')
-            ->with('teacher')
-            ->orderBy('date');
-    }
+    // public function progressByTeacher(): HasMany
+    // {
+    //     return $this->hasMany(QuranProgress::class, 'student_id')
+    //         ->with('teacher')
+    //         ->orderBy('date');
+    // }
 
     /** Student's attendance records */
+    /** سجلات الحضور والغياب للطالب */
     public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class, 'student_id');
@@ -182,27 +221,27 @@ class User extends Authenticatable
      *   [ 'teacher' => User, 'sessions' => int, 'juz_covered' => [...], 'pages' => int ]
      * ]
      */
-    public function teacherSummary(): \Illuminate\Support\Collection
-    {
-        return $this->progress()
-            ->with(['teacher', 'page'])
-            ->get()
-            ->groupBy('teacher_id')
-            ->map(function ($sessions, $teacherId) {
-                return [
-                    'teacher' => $sessions->first()->teacher,
-                    'sessions' => $sessions->count(),
-                    'pages_count' => $sessions->unique('quran_page_number')->count(),
-                    'juz_covered' => $sessions->pluck('page.juz_number')
-                        ->unique()
-                        ->sort()
-                        ->values(),
-                    'first_date' => $sessions->min('date'),
-                    'last_date' => $sessions->max('date'),
-                ];
-            })
-            ->values();
-    }
+    // public function teacherSummary(): \Illuminate\Support\Collection
+    // {
+    //     return $this->progress()
+    //         ->with(['teacher', 'page'])
+    //         ->get()
+    //         ->groupBy('teacher_id')
+    //         ->map(function ($sessions, $teacherId) {
+    //             return [
+    //                 'teacher' => $sessions->first()->teacher,
+    //                 'sessions' => $sessions->count(),
+    //                 'pages_count' => $sessions->unique('quran_page_number')->count(),
+    //                 'juz_covered' => $sessions->pluck('page.juz_number')
+    //                     ->unique()
+    //                     ->sort()
+    //                     ->values(),
+    //                 'first_date' => $sessions->min('date'),
+    //                 'last_date' => $sessions->max('date'),
+    //             ];
+    //         })
+    //         ->values();
+    // }
 
     // Accessor to get arabic role
     public function getArabicRoleAttribute() // invoke by $user->arabic_role
@@ -231,4 +270,67 @@ class User extends Authenticatable
     {
         return $this->activeEnrollment?->halqa?->teacher?->name ?? '-';
     }
+    /**
+     * [UPDATED] ملخص ما أنجزه الطالب مع كل مدرس.
+     *
+     * يعمل حتى بعد soft delete للمدرس أو الطالب لأن:
+     * - quran_progress يحتفظ بـ teacher_id حتى بعد نقل المدرس
+     * - withTrashed() يجلب المدرسين المحذوفين أيضاً لعرض تاريخ كامل
+     *
+     * المنطق:
+     * - إذا أنهى الطالب كل صفحات الجزء → "أنهى الجزء X بنجاح ✅"
+     * - إذا أنهى جزءاً من الجزء      → "وصل إلى الصفحة X من الجزء Y"
+     * - يدعم حفظ غير متسلسل (جزء عم ثم البقرة)
+     */
+    // public function teacherSummary(): \Illuminate\Support\Collection
+    // {
+    //     // جلب كل صفحات القرآن مرة واحدة لتجنب N+1 queries
+    //     $allPages = QuranPage::all()->keyBy('page_number');
+
+    //     // تجميع صفحات كل جزء
+    //     $pagesByJuz = $allPages->groupBy('juz_number')
+    //         ->map(fn($pages) => $pages->pluck('page_number'));
+
+    //     return $this->progress()
+    //         ->with([
+    //             'teacher' => fn($q) => $q->withTrashed(), // [NEW] يشمل المدرسين المحذوفين
+    //             'page',
+    //         ])
+    //         ->get()
+    //         ->groupBy('teacher_id')
+    //         ->map(function ($sessions) use ($pagesByJuz) {
+
+    //             // تجميع الصفحات المغطاة حسب الجزء
+    //             $coveredByJuz = $sessions
+    //                 ->groupBy(fn($s) => $s->page?->juz_number)
+    //                 ->filter(fn($_, $juz) => !is_null($juz))
+    //                 ->map(function ($juzSessions, $juzNumber) use ($pagesByJuz) {
+
+    //                     $coveredPages  = $juzSessions->pluck('quran_page_number')->unique();
+    //                     $allJuzPages   = $pagesByJuz[$juzNumber] ?? collect();
+    //                     $isCompleted   = $coveredPages->count() === $allJuzPages->count();
+    //                     $maxPage       = $coveredPages->max();
+
+    //                     return [
+    //                         'juz_number' => $juzNumber,
+    //                         'completed'  => $isCompleted,
+    //                         'max_page'   => $maxPage,
+    //                         'text'       => $isCompleted
+    //                             ? "أنهى الجزء {$juzNumber} بنجاح ✅"
+    //                             : "وصل إلى الصفحة {$maxPage} من الجزء {$juzNumber}",
+    //                     ];
+    //                 })
+    //                 ->sortBy('juz_number')
+    //                 ->values();
+
+    //             return [
+    //                 'teacher'     => $sessions->first()->teacher, // قد يكون محذوفاً (soft)
+    //                 'sessions'    => $sessions->count(),
+    //                 'first_date'  => $sessions->min('date'),
+    //                 'last_date'   => $sessions->max('date'),
+    //                 'juz_details' => $coveredByJuz,
+    //             ];
+    //         })
+    //         ->values();
+    // }
 }

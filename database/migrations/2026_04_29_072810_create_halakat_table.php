@@ -15,9 +15,11 @@ return new class extends Migration
             $table->id();
             $table->string('name', 45);
             $table->string('notes', 255)->nullable();
-            $table->foreignId('teacher_id')->unique()
-                ->constrained('users')
-                ->cascadeOnDelete();
+            $table->foreignId('teacher_id')
+            ->nullable()
+            ->unique()
+            ->constrained('users')
+            ->nullOnDelete();
             $table->timestamps();
         });
     }
