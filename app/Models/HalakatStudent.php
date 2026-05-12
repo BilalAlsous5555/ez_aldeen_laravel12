@@ -44,7 +44,7 @@ class HalakatStudent extends Model
 
     public function halqa(): BelongsTo
     {
-        return $this->belongsTo(Halakat::class, 'halakat_id');
+        return $this->belongsTo(Halakat::class, 'halakat_id')->withTrashed();
     }
 
     // -------------------------------------------------------------------------

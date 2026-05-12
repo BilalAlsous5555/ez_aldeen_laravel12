@@ -40,33 +40,50 @@ class AttendanceCrudController extends CrudController
      */
     protected function setupListOperation()
     {
-        // CRUD::setFromDb(); // set columns from db columns.
+        $this->crud->addClause('whereHas', 'student', fn ($q) => $q->whereNull('deleted_at'));
+        $this->crud->addClause('whereHas', 'halqa', fn ($q) => $q->whereNull('deleted_at'));
+        $this->crud->addClause('whereHas', 'recorder', fn ($q) => $q->whereNull('deleted_at'));
+
         CRUD::column('student')->wrapper([
             'href' => function ($crud, $column, $entry) {
                 return backpack_url('user/'.$entry->student_id.'/show');
             },
-        ])->label('اسم الطالب');
+        ])->label('اسم الطالب')->searchLogic(function ($query, $column, $searchTerm) {
+            $query->orWhereHas('student', function ($q) use ($searchTerm) {
+                $q->where('name', 'like', '%'.$searchTerm.'%');
+            });
+        });
 
-        CRUD::column('status')->label('حالة الحضور');
-        CRUD::column('excused_reason')->label('عذر الغياب');
+        CRUD::column('status')->label('حالة الحضور')->searchLogic(function ($query, $column, $searchTerm) {
+            $query->orWhere('status', 'like', '%'.$searchTerm.'%');
+        });
+        CRUD::column('excused_reason')->label('عذر الغياب')->searchLogic(function ($query, $column, $searchTerm) {
+            $query->orWhere('excused_reason', 'like', '%'.$searchTerm.'%');
+        });
 
         CRUD::column('halqa')->wrapper([
             'href' => function ($crud, $column, $entry) {
                 return backpack_url('halakat/'.$entry->halakat_id.'/show');
             },
-        ])->label('اسم الحلقة');
+        ])->label('اسم الحلقة')->searchLogic(function ($query, $column, $searchTerm) {
+            $query->orWhereHas('halqa', function ($q) use ($searchTerm) {
+                $q->where('name', 'like', '%'.$searchTerm.'%');
+            });
+        });
 
         CRUD::column('recorder')->wrapper([
             'href' => function ($crud, $column, $entry) {
                 return backpack_url('user/'.$entry->recorded_by.'/show');
             },
-        ])->label('تسجيل المدرس');
+        ])->label('تسجيل المدرس')->searchLogic(function ($query, $column, $searchTerm) {
+            $query->orWhereHas('recorder', function ($q) use ($searchTerm) {
+                $q->where('name', 'like', '%'.$searchTerm.'%');
+            });
+        });
 
-        CRUD::column('attendance_date')->label('تاريخ تسجيل الحضور');
-        /**
-         * Columns can be defined using the fluent syntax:
-         * - CRUD::column('price')->type('number');
-         */
+        CRUD::column('attendance_date')->label('تاريخ تسجيل الحضور')->searchLogic(function ($query, $column, $searchTerm) {
+            $query->orWhere('attendance_date', 'like', '%'.$searchTerm.'%');
+        });
     }
 
     /**

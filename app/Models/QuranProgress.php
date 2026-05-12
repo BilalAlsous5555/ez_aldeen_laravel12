@@ -2,10 +2,6 @@
 
 namespace App\Models;
 
-use App\Models\Halakat;
-use App\Models\QuranPage;
-use App\Models\Surah;
-use App\Models\User;
 use Backpack\CRUD\app\Models\Traits\CrudTrait;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -13,7 +9,9 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class QuranProgress extends Model
 {
     use CrudTrait;
+
     protected $table = 'quran_progress';
+
     protected $fillable = [
         'student_id',
         'halakat_id',
@@ -30,9 +28,9 @@ class QuranProgress extends Model
     protected function casts(): array
     {
         return [
-            'date'      => 'date',
-            'from_aya'  => 'integer',
-            'to_aya'    => 'integer',
+            'date' => 'date',
+            'from_aya' => 'integer',
+            'to_aya' => 'integer',
         ];
     }
 
@@ -57,7 +55,7 @@ class QuranProgress extends Model
 
     public function halqa(): BelongsTo
     {
-        return $this->belongsTo(Halakat::class, 'halakat_id');
+        return $this->belongsTo(Halakat::class, 'halakat_id')->withTrashed();
     }
 
     public function surah(): BelongsTo

@@ -31,6 +31,12 @@ return [
     'auth_layout' => 'default', // default, illustration, cover
 
     /**
+     * HTML direction (ltr or rtl).
+     * Set to 'rtl' for Arabic and other right-to-left languages.
+     */
+    'html_direction' => 'rtl',
+
+    /**
      * Here you can easily load your own extra css styles.
      * Note: if you want to customize the style to create your own custom skin colors:
      *   - copy the file "vendor/backpack/theme-tabler/resources/assets/css/colors.css" into your project, with a different name
@@ -46,6 +52,7 @@ return [
         // base_path('vendor/backpack/theme-tabler/resources/assets/css/skins/pinstripe-background.css'),
         // base_path('vendor/backpack/theme-tabler/resources/assets/css/skins/paper-background.css'),
         public_path('css/islamic-theme.css'),
+        public_path('css/rtl-overrides.css'),
     ],
 
     /**

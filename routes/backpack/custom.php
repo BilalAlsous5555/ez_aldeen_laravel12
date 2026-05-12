@@ -39,6 +39,7 @@ Route::group([
 
         return response()->json($halakat->pluck('name', 'id'));
     })->name('halakat.byRole');
+    Route::crud('pending-transfer', 'PendingTransferCrudController');
     Route::crud('quran-progress', 'QuranProgressCrudController');
     Route::crud('attendance', 'AttendanceCrudController');
     Route::crud('note', 'NoteCrudController');

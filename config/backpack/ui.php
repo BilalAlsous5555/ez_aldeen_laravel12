@@ -63,7 +63,7 @@ return [
     'home_link' => '',
 
     // Menu logo. You can replace this with an <img> tag if you have a logo.
-    'project_logo' => '<b>معهد</b> عزالدين القسام ',
+    'project_logo' => ' <b>معهد عزالدين القسام</b>',
 
     // Show / hide breadcrumbs on admin panel pages.
     'breadcrumbs' => true,

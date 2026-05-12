@@ -35,9 +35,10 @@ class Note extends Model
         return $this->belongsTo(User::class, 'sender_id')->withTrashed();
     }
 
-    // halakat_id قد يصبح null إذا حُذفت الحلقة — [NO CHANGE]
+     // halakat_id يبقى كما هو عند soft delete للحلقة (لا nullOnDelete هنا)
+    // withTrashed() لعرض اسم الحلقة في سياق الملاحظة
     public function halqa(): BelongsTo
     {
-        return $this->belongsTo(Halakat::class, 'halakat_id');
+        return $this->belongsTo(Halakat::class, 'halakat_id')->withTrashed();
     }
 }

@@ -17,6 +17,7 @@ class AccountCrudController extends CrudController
     // use \Backpack\CRUD\app\Http\Controllers\Operations\CreateOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\DeleteOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\ListOperation;
+
     // use \Backpack\CRUD\app\Http\Controllers\Operations\ShowOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\UpdateOperation;
 
@@ -29,11 +30,28 @@ class AccountCrudController extends CrudController
 
     protected function setupListOperation()
     {
-        CRUD::column('arabic_role')->type('text')->label('الدور');
-        CRUD::column('name')->type('text')->label('الاسم');
-        CRUD::column('phone')->type('text')->label('رقم الهاتف');
-        CRUD::column('email')->type('email')->label('البريد الإلكتروني');
-        CRUD::column('password')->type('text')->label('كلمة المرور');
+        CRUD::column('arabic_role')->type('text')->label('الدور')->searchLogic(function ($query, $column, $searchTerm) {
+            $arabicToEnglish = [
+                'مدير' => 'admin',
+                'مدرس' => 'teacher',
+                'طالب' => 'student',
+            ];
+            if (isset($arabicToEnglish[$searchTerm])) {
+                $query->orWhere('role', $arabicToEnglish[$searchTerm]);
+            } else {
+                $query->orWhere('role', 'like', '%'.$searchTerm.'%');
+            }
+        });
+        CRUD::column('name')->type('text')->label('الاسم')->searchLogic(function ($query, $column, $searchTerm) {
+            $query->orWhere('name', 'like', '%'.$searchTerm.'%');
+        });
+        CRUD::column('phone')->type('text')->label('رقم الهاتف')->searchLogic(function ($query, $column, $searchTerm) {
+            $query->orWhere('phone', 'like', '%'.$searchTerm.'%');
+        });
+        CRUD::column('email')->type('email')->label('البريد الإلكتروني')->searchLogic(function ($query, $column, $searchTerm) {
+            $query->orWhere('email', 'like', '%'.$searchTerm.'%');
+        });
+        CRUD::column('password')->type('text')->label('كلمة المرور')->searchLogic(false);
         CRUD::column('birth_date')->type('date')->label('تاريخ الميلاد');
         CRUD::column('created_at')->type('date')->label('تاريخ الانضمام');
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Admin;
 
+use App\Http\Controllers\Admin\Operations\RestoreOperation;
 use App\Http\Requests\UserRequest;
 use App\Models\Halakat;
 use App\Models\HalakatStudent;
@@ -21,6 +22,7 @@ class UserCrudController extends CrudController
     use \Backpack\CRUD\app\Http\Controllers\Operations\ListOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\ShowOperation;
     use \Backpack\CRUD\app\Http\Controllers\Operations\UpdateOperation;
+    use RestoreOperation;
 
     /**
      * Configure the CrudPanel object. Apply settings to all operations.
@@ -43,6 +45,40 @@ class UserCrudController extends CrudController
      */
     protected function setupListOperation()
     {
+        $this->crud->addClause('withTrashed');
+        $this->crud->addButton('top', 'filters', 'view', 'crud::buttons.filters', 'beginning');
+
+        // ---- Filter logic based on GET parameter ----
+        $filter = request('filter');
+        if ($filter === 'active_students') {
+            $this->crud->addClause('where', 'role', 'student');
+            $this->crud->addClause('whereNull', 'deleted_at');
+        } elseif ($filter === 'active_teachers') {
+            $this->crud->addClause('where', 'role', 'teacher');
+            $this->crud->addClause('whereNull', 'deleted_at');
+        } elseif ($filter === 'deleted_students') {
+            $this->crud->addClause('where', 'role', 'student');
+            $this->crud->addClause('whereNotNull', 'deleted_at');
+        } elseif ($filter === 'deleted_teachers') {
+            $this->crud->addClause('where', 'role', 'teacher');
+            $this->crud->addClause('whereNotNull', 'deleted_at');
+        } elseif ($filter === 'without_halqa') {
+            $this->crud->addClause('where', function ($q) {
+                $q->whereNull('deleted_at');
+                $q->where(function ($sub) {
+                    $sub->where(function ($studentQuery) {
+                        $studentQuery->where('role', 'student')
+                            ->where(function ($sq) {
+                                $sq->whereDoesntHave('activeEnrollment')
+                                    ->orWhereHas('activeEnrollment.halqa', fn ($hq) => $hq->onlyTrashed());
+                            });
+                    })->orWhere(function ($teacherQuery) {
+                        $teacherQuery->where('role', 'teacher')
+                            ->whereDoesntHave('halqa');
+                    });
+                });
+            });
+        }
 
         /**
          * 1- ADD columns
@@ -56,6 +92,17 @@ class UserCrudController extends CrudController
          * 9- Export buttons
          * 10- Details row
          */
+        // Status column to show deleted/active
+        CRUD::column('deleted_at')
+            ->type('boolean')
+            ->label('الحالة')
+            ->options([0 => 'نشط', 1 => 'محذوف'])
+            ->wrapper([
+                'class' => function ($crud, $column, $entry) {
+                    return $entry->trashed() ? 'text-danger' : 'text-success';
+                },
+            ]);
+
         // Role column with search for Arabic and English
         CRUD::column('arabic_role')->type('text')->label('الدور')->searchLogic(function ($query, $column, $searchTerm) {
             $arabicToEnglish = [
@@ -75,43 +122,64 @@ class UserCrudController extends CrudController
             $query->orWhere('name', 'like', '%'.$searchTerm.'%');
         });
 
-        CRUD::column('activeEnrollment')
-            ->type('model_function')
-            ->function_name('getActiveHalqaName')
-            ->label('الحلقة الحالية')
-            ->wrapper([
-                'href' => function ($crud, $column, $entry) {
-                    if ($entry->isTeacher() && $entry->halqa) {
-                        return backpack_url('halakat/'.$entry->halqa->id.'/show');
-                    }
+        $hideTeacher = in_array(request('filter'), ['active_teachers', 'deleted_teachers', 'deleted_students', 'without_halqa']);
+        $hideHalqa = in_array(request('filter'), ['deleted_teachers', 'deleted_students', 'without_halqa']);
 
-                    if ($entry->activeEnrollment) {
-                        return backpack_url('halakat/'.$entry->activeEnrollment->halakat_id.'/show');
-                    }
+        if (! $hideHalqa) {
+            CRUD::column('activeEnrollment')
+                ->type('model_function')
+                ->function_name('getActiveHalqaName')
+                ->label('الحلقة الحالية')
+                ->wrapper([
+                    'href' => function ($crud, $column, $entry) {
+                        if ($entry->isTeacher() && $entry->halqa) {
+                            return backpack_url('halakat/'.$entry->halqa->id.'/show');
+                        }
 
-                    return null;
-                },
-            ]);
+                        if ($entry->activeEnrollment) {
+                            return backpack_url('halakat/'.$entry->activeEnrollment->halakat_id.'/show');
+                        }
 
-        CRUD::column('activeHalqaTeacher')
-            ->type('model_function')
-            ->function_name('getActiveHalqaTeacherName')
-            ->label('المدرس')
-            ->wrapper([
-                'href' => function ($crud, $column, $entry) {
-                    if ($entry->activeEnrollment?->halqa?->teacher_id) {
-                        return backpack_url('user/'.$entry->activeEnrollment->halqa->teacher_id.'/show');
-                    }
+                        return null;
+                    },
+                ])
+                ->searchLogic(function ($query, $column, $searchTerm) {
+                    $query->orWhereHas('activeEnrollment.halqa', function ($q) use ($searchTerm) {
+                        $q->where('name', 'like', '%'.$searchTerm.'%');
+                    });
+                });
+        }
 
-                    return null;
-                },
-            ]);
+        if (! $hideTeacher) {
+            CRUD::column('activeHalqaTeacher')
+                ->type('model_function')
+                ->function_name('getActiveHalqaTeacherName')
+                ->label('المدرس')
+                ->wrapper([
+                    'href' => function ($crud, $column, $entry) {
+                        if ($entry->activeEnrollment?->halqa?->teacher_id) {
+                            return backpack_url('user/'.$entry->activeEnrollment->halqa->teacher_id.'/show');
+                        }
+
+                        return null;
+                    },
+                ])
+                ->searchLogic(function ($query, $column, $searchTerm) {
+                    $query->orWhereHas('activeEnrollment.halqa.teacher', function ($q) use ($searchTerm) {
+                        $q->where('name', 'like', '%'.$searchTerm.'%');
+                    });
+                });
+        }
         // Other columns with search
         CRUD::column('phone')->type('text')->label('رقم الهاتف')->searchLogic(function ($query, $column, $searchTerm) {
             $query->orWhere('phone', 'like', '%'.$searchTerm.'%');
         });
         CRUD::column('birth_date')->type('date')->label('تاريخ الولادة');
         CRUD::column('created_at')->type('date')->label('تاريخ الانضمام');
+
+        if (in_array(request('filter'), ['deleted_students', 'deleted_teachers'])) {
+            CRUD::column('deleted_at')->type('datetime')->label('تاريخ الحذف');
+        }
 
     }
 

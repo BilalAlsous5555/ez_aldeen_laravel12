@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Requests\HalakatRequest;
 use Backpack\CRUD\app\Http\Controllers\CrudController;
 use Backpack\CRUD\app\Library\CrudPanel\CrudPanelFacade as CRUD;
+use Illuminate\Support\Facades\DB;
 
 /**
  * Class HalakatCrudController
@@ -41,18 +42,26 @@ class HalakatCrudController extends CrudController
     protected function setupListOperation()
     {
         // CRUD::setFromDb(); // set columns from db columns.
-        CRUD::column('name')->label('اسم الحلقة');
+        CRUD::column('name')->label('اسم الحلقة')->searchLogic(function ($query, $column, $searchTerm) {
+            $query->orWhere('name', 'like', '%'.$searchTerm.'%');
+        });
         CRUD::column('teacher')->wrapper([
             'href' => function ($crud, $column, $entry) {
                 return backpack_url('user/'.$entry->teacher_id.'/show');
             },
-        ])->label('اسم المدرس');
+        ])->label('اسم المدرس')->searchLogic(function ($query, $column, $searchTerm) {
+            $query->orWhereHas('teacher', function ($q) use ($searchTerm) {
+                $q->where('name', 'like', '%'.$searchTerm.'%');
+            });
+        });
 
         CRUD::column('activeStudentsCount')
             ->type('model_function')
             ->function_name('getActiveStudentsCount')
             ->label('عدد الطلاب');
-        CRUD::column('notes')->label('ملاحظات عن الحلقة');
+        CRUD::column('notes')->label('ملاحظات عن الحلقة')->searchLogic(function ($query, $column, $searchTerm) {
+            $query->orWhere('notes', 'like', '%'.$searchTerm.'%');
+        });
 
         /**
          * Columns can be defined using the fluent syntax:
@@ -101,7 +110,6 @@ class HalakatCrudController extends CrudController
 
         $item = \App\Models\Halakat::create($data);
 
-
         $saveAction = $this->crud->getSaveAction();
         if ($saveAction === 'save_and_new') {
             return redirect($this->crud->route.'/create');
@@ -123,7 +131,6 @@ class HalakatCrudController extends CrudController
 
         $item->fill($data)->save();
 
-
         $saveAction = $this->crud->getSaveAction();
         if ($saveAction === 'save_and_new') {
             return redirect($this->crud->route.'/create');
@@ -133,5 +140,25 @@ class HalakatCrudController extends CrudController
         }
 
         return redirect($this->crud->route);
+    }
+
+    public function destroy()
+    {
+        $this->crud->hasAccessOrFail('delete');
+
+        $id = $this->crud->getCurrentEntryId();
+        $halaka = \App\Models\Halakat::find($id);
+
+        if (! $halaka) {
+            return response()->json(['error' => 'الحلقة غير موجودة'], 404);
+        }
+
+        try {
+            $halaka->delete();
+
+            return '1';
+        } catch (\Illuminate\Database\QueryException $e) {
+            return response()->json(['error' => 'لا يمكن حذف الحلقة لأنها مرتبطة بسجلات أخرى'], 400);
+        }
     }
 }

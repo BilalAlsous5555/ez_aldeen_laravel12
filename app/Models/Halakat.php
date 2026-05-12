@@ -7,10 +7,11 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Halakat extends Model
 {
-    use CrudTrait;
+    use CrudTrait, SoftDeletes;
 
     protected $table = 'halakat';
 
@@ -75,7 +76,7 @@ class Halakat extends Model
     }
 
     /** Notes linked to this halqa */
-    public function notes(): HasMany
+    public function halakaNotes(): HasMany
     {
         return $this->hasMany(Note::class, 'halakat_id');
     }
@@ -86,5 +87,33 @@ class Halakat extends Model
     public function getActiveStudentsCount()
     {
         return $this->activeStudents()->count();
+    }
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    /** هل هذه الحلقة بدون مدرس حالياً؟ */
+    public function hasNoTeacher(): bool
+    {
+        return is_null($this->teacher_id);
+    }
+
+    // -------------------------------------------------------------------------
+    // Scopes — للإدارة
+    // -------------------------------------------------------------------------
+
+    /**
+     * الطلاب الذين is_active=true لكن حلقتهم محذوفة (بانتظار النقل).
+     * الاستخدام: HalakatStudent::withoutHalqa()->get()
+     */
+    public static function studentsWithoutHalqa(): \Illuminate\Database\Eloquent\Collection
+    {
+        return HalakatStudent::where('is_active', true)
+            ->whereHas('halqa', fn ($q) => $q->onlyTrashed())
+            ->with([
+                'student',
+                'halqa' => fn ($q) => $q->withTrashed(),
+            ])
+            ->get();
     }
 }

@@ -73,6 +73,28 @@ class User extends Authenticatable
     {
         return $this->role === 'student';
     }
+    // -------------------------------------------------------------------------
+    // Events — booted()
+    // -------------------------------------------------------------------------
+
+    protected static function booted(): void
+    {
+        // عند حذف مدرس (soft delete) → حذف حلقته soft تلقائياً
+        // هذا يُطلق سلسلة:
+        //   1. المدرس يُحذف soft
+        //   2. حلقته تُحذف soft
+        //   3. طلاب الحلقة يبقون is_active=true بدون حلقة فعلية
+        //   4. الإدارة تراهم كـ "طلاب بدون حلقة" وتنقلهم
+        static::deleting(function (User $user) {
+            if ($user->isTeacher() && ! $user->isForceDeleting()) {
+                $user->halqa?->delete(); // soft delete للحلقة
+            }
+        });
+
+        // عند استعادة مدرس محذوف → لا تُستعاد حلقته السابقة
+        // المدرس يُعاد تعيينه لحلقة جديدة يدوياً من الإدارة
+        // (لا نفعل شيئاً عند restore — الحلقة تبقى محذوفة)
+    }
 
     // -------------------------------------------------------------------------
     // TEACHER relations
@@ -107,8 +129,7 @@ class User extends Authenticatable
         return $this->hasMany(Note::class, 'sender_id');
     }
 
-
-       // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // TEACHER — نقل المدرس لحلقة أخرى
     // -------------------------------------------------------------------------
 
@@ -120,17 +141,17 @@ class User extends Authenticatable
      * 2. تعيين teacher_id = this->id في الحلقة الجديدة
      *
      * ملاحظة: UNIQUE على teacher_id يمنع ربط مدرس بأكثر من حلقة
-     *
-     * @param int $newHalakatId
      */
     public function transferToHalqa(int $newHalakatId): void
     {
-        // 1. تفريغ الحلقة القديمة من هذا المدرس
+        // تفريغ الحلقة القديمة
         Halakat::where('teacher_id', $this->id)
             ->update(['teacher_id' => null]);
 
-        // 2. ربط المدرس بالحلقة الجديدة
+        // ربط المدرس بالحلقة الجديدة
         Halakat::where('id', $newHalakatId)
+            ->whereNull('deleted_at')   // لا يُنقل لحلقة محذوفة
+            ->whereNull('teacher_id')   // لا يُنقل لحلقة لديها مدرس
             ->update(['teacher_id' => $this->id]);
     }
 
@@ -153,7 +174,7 @@ class User extends Authenticatable
     /**
      * Current active halqa the student belongs to.
      */
-        /**
+    /**
      * الحلقة الحالية للطالب فقط.
      * [NO CHANGE] — دائماً صف واحد is_active = true لكل طالب
      */
@@ -170,7 +191,8 @@ class User extends Authenticatable
     {
         return $this->belongsToMany(Halakat::class, 'halakat_students', 'student_id', 'halakat_id')
             ->withPivot(['joined_at', 'left_at', 'is_active'])
-            ->orderByPivot('joined_at');
+            ->orderByPivot('joined_at')
+            ->withTrashed();
     }
 
     /** Student's Quran progress records */
@@ -209,6 +231,20 @@ class User extends Authenticatable
     {
         return $this->hasMany(Note::class, 'student_id')
             ->latest();
+    }
+    // -------------------------------------------------------------------------
+    // Helpers — طلاب بدون حلقة فعلية (فترة انتقالية)
+    // -------------------------------------------------------------------------
+
+    /**
+     * هل الطالب بدون حلقة فعلية حالياً؟
+     * يحدث عند حذف الحلقة soft قبل نقل الطالب
+     */
+    public function hasNoActiveHalqa(): bool
+    {
+        $enrollment = $this->activeEnrollment()->with('halqa')->first();
+
+        return $enrollment === null || $enrollment->halqa?->trashed();
     }
 
     // -------------------------------------------------------------------------
@@ -259,16 +295,39 @@ class User extends Authenticatable
     public function getActiveHalqaName()
     {
         if ($this->isTeacher()) {
-            return $this->halqa?->name ?? '-';
+            $halqa = $this->halqa;
+            if (! $halqa) {
+                return '-';
+            }
+
+            return $halqa->trashed() ? "{$halqa->name} (محذوفة)" : $halqa->name;
         }
 
-        return $this->activeEnrollment?->halqa?->name ?? '-';
+        $enrollment = $this->activeEnrollment()->with('halqa')->first();
+        if (! $enrollment || ! $enrollment->halqa) {
+            return '-';
+        }
+
+        if ($enrollment->halqa->trashed()) {
+            return request('filter') === 'active_students' ? '-' : "{$enrollment->halqa->name} (محذوفة)";
+        }
+
+        return $enrollment->halqa->name;
     }
 
     // Accessor for active halqa teacher name (used in CRUD column)
     public function getActiveHalqaTeacherName()
     {
-        return $this->activeEnrollment?->halqa?->teacher?->name ?? '-';
+        $enrollment = $this->activeEnrollment()->with('halqa.teacher')->first();
+        if (! $enrollment || ! $enrollment->halqa || ! $enrollment->halqa->teacher) {
+            return '-';
+        }
+
+        if ($enrollment->halqa->teacher->trashed()) {
+            return request('filter') === 'active_students' ? '-' : $enrollment->halqa->teacher->name;
+        }
+
+        return $enrollment->halqa->teacher->name;
     }
     /**
      * [UPDATED] ملخص ما أنجزه الطالب مع كل مدرس.
