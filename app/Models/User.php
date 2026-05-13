@@ -202,6 +202,44 @@ class User extends Authenticatable
         return $this->hasMany(QuranProgress::class, 'student_id');
     }
 
+     // -------------------------------------------------------------------------
+    // STUDENT — الإنجازات
+    // -------------------------------------------------------------------------
+
+    /** كل إنجازات الطالب (سور وأجزاء) */
+    public function achievements(): HasMany
+    {
+        return $this->hasMany(StudentAchievement::class, 'student_id');
+    }
+
+    /** السور المحفوظة فقط */
+    public function memorizedSurahs(): HasMany
+    {
+        return $this->hasMany(StudentAchievement::class, 'student_id')
+            ->where('type', 'surah_memorized')
+            ->with('surah')
+            ->orderBy('achieved_at');
+    }
+
+    /** الأجزاء المحفوظة فقط */
+    public function memorizedJuz(): HasMany
+    {
+        return $this->hasMany(StudentAchievement::class, 'student_id')
+            ->where('type', 'juz_memorized')
+            ->orderBy('juz_number');
+    }
+
+    /** ملخص سريع للإنجازات */
+    public function achievementsSummary(): array
+    {
+        return [
+            'surahs_count' => $this->achievements()->surahsOnly()->count(),
+            'juz_count'    => $this->achievements()->juzOnly()->count(),
+            'juz_numbers'  => $this->achievements()->juzOnly()->pluck('juz_number')->sort()->values(),
+        ];
+    }
+
+
     /**
      * Progress grouped by teacher — used for the student profile page.
      * Returns a collection keyed by teacher_id.

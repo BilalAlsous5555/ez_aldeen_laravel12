@@ -57,6 +57,31 @@ class AttendancesTableSeeder extends Seeder
             ['student_id' => $students[19], 'halakat_id' => $halakat[9], 'attendance_date' => '2026-04-01', 'status' => 'غائب', 'excused_reason' => 'ظروف عائلية', 'recorded_by' => $teachers[9]],
         ];
 
-        DB::table('attendances')->insert($attendances);
+        DB::table('attendances')->insertOrIgnore($attendances);
+
+        $today = now()->toDateString();
+        $todayAttendances = [];
+        $enrollments = DB::table('halakat_students')
+            ->join('users', 'halakat_students.student_id', '=', 'users.id')
+            ->where('halakat_students.is_active', true)
+            ->whereNull('users.deleted_at')
+            ->select('halakat_students.*')
+            ->get();
+        $excuses = ['مرض', 'ظروف عائلية', 'سفر', 'امتحان'];
+        foreach ($enrollments as $i => $enr) {
+            $tid = $teachers[$i % count($teachers)];
+            $status = $i % 5 === 0 ? 'غائب' : 'حاضر';
+            $reason = $status === 'غائب' ? $excuses[$i % count($excuses)] : null;
+            $todayAttendances[] = [
+                'student_id' => $enr->student_id,
+                'halakat_id' => $enr->halakat_id,
+                'attendance_date' => $today,
+                'status' => $status,
+                'excused_reason' => $reason,
+                'recorded_by' => $tid,
+            ];
+        }
+
+        DB::table('attendances')->insertOrIgnore($todayAttendances);
     }
 }

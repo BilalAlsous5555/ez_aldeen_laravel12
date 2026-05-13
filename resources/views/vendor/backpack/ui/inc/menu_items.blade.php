@@ -7,4 +7,5 @@
 {{-- <x-backpack::menu-item title="Surahs" icon="la la-question" :link="backpack_url('surah')" />
 <x-backpack::menu-item title="Quran pages" icon="la la-question" :link="backpack_url('quran-page')" /> --}}
 <x-backpack::menu-item title="احصائيات الحضور" icon="la la-check-circle" :link="backpack_url('attendance')" />
+<x-backpack::menu-item title="انجازات الطلاب" icon="la la-trophy" :link="backpack_url('student-achievement')" />
 <x-backpack::menu-item title="حسابات المستخدمين" icon="la la-user-circle" :link="backpack_url('accounts')" />

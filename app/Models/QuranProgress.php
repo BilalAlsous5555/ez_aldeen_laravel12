@@ -23,6 +23,7 @@ class QuranProgress extends Model
         'evaluation',
         'notes',
         'date',
+        'memorize_type',
     ];
 
     protected function casts(): array
@@ -71,5 +72,21 @@ class QuranProgress extends Model
     public function ayatCount(): int
     {
         return $this->to_aya - $this->from_aya + 1;
+    }
+
+    // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    // هل هذه جلسة حفظ (وليس مراجعة)؟
+    public function isMemorize(): bool
+    {
+        return $this->memorize_type === 'حفظ';
+    }
+
+    // هل هذه جلسة مراجعة؟
+    public function isRevision(): bool
+    {
+        return $this->memorize_type === 'مراجعة';
     }
 }

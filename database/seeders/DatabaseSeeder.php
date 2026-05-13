@@ -13,6 +13,7 @@ class DatabaseSeeder extends Seeder
         DB::statement('SET FOREIGN_KEY_CHECKS=0');
         DB::table('notes')->truncate();
         DB::table('attendances')->truncate();
+        DB::table('student_achievements')->truncate();
         DB::table('quran_progress')->truncate();
         DB::table('halakat_students')->truncate();
         DB::table('halakat')->truncate();
@@ -29,6 +30,7 @@ class DatabaseSeeder extends Seeder
             HalakatTableSeeder::class,
             HalakatStudentsTableSeeder::class,
             QuranProgressTableSeeder::class,
+            StudentAchievementsTableSeeder::class,
             AttendancesTableSeeder::class,
             NotesTableSeeder::class,
         ]);

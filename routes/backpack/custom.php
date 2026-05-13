@@ -45,6 +45,7 @@ Route::group([
     Route::crud('note', 'NoteCrudController');
     Route::crud('surah', 'SurahCrudController');
     Route::crud('quran-page', 'QuranPageCrudController');
+    Route::crud('student-achievement', 'StudentAchievementCrudController');
 }); // this should be the absolute last line of this file
 
 /**

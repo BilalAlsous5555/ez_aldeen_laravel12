@@ -44,7 +44,10 @@ return new class extends Migration
 
             $table->enum('evaluation', ['ممتاز', 'جيد جدا', 'جيد', 'اعادة'])->nullable();
             $table->string('notes', 255)->nullable();
-            
+            // [NEW] نوع الجلسة:
+            // memorize  → حفظ جديد — يُفعّل التحقق من إنهاء السورة تلقائياً
+            // revision  → مراجعة فقط — لا يُنشئ أي إنجاز في student_achievements
+            $table->enum('memorize_type', ['حفظ', 'مراجعة'])->default('حفظ');
             $table->date('date');
             $table->timestamps();
 
