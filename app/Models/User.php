@@ -52,6 +52,7 @@ class User extends Authenticatable
     {
         return [
             'email_verified_at' => 'datetime',
+            'birth_date' => 'date',
             // 'password' => 'hashed',
         ];
     }
@@ -202,7 +203,7 @@ class User extends Authenticatable
         return $this->hasMany(QuranProgress::class, 'student_id');
     }
 
-     // -------------------------------------------------------------------------
+    // -------------------------------------------------------------------------
     // STUDENT — الإنجازات
     // -------------------------------------------------------------------------
 
@@ -234,11 +235,10 @@ class User extends Authenticatable
     {
         return [
             'surahs_count' => $this->achievements()->surahsOnly()->count(),
-            'juz_count'    => $this->achievements()->juzOnly()->count(),
-            'juz_numbers'  => $this->achievements()->juzOnly()->pluck('juz_number')->sort()->values(),
+            'juz_count' => $this->achievements()->juzOnly()->count(),
+            'juz_numbers' => $this->achievements()->juzOnly()->pluck('juz_number')->sort()->values(),
         ];
     }
-
 
     /**
      * Progress grouped by teacher — used for the student profile page.

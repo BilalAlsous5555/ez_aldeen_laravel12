@@ -190,6 +190,21 @@ class UserCrudController extends CrudController
      *
      * @return void
      */
+    protected function setupShowOperation()
+    {
+        $this->crud->set('show.setFromDb', false);
+        $this->crud->set('show.timestamps', false);
+        $this->crud->set('show.softDeletes', true);
+        $this->crud->set('show.view', 'vendor.backpack.crud.show_user');
+
+        CRUD::column('name')->type('text')->label('الاسم');
+        CRUD::column('email')->type('email')->label('البريد الإلكتروني');
+        CRUD::column('phone')->type('text')->label('رقم الهاتف');
+        CRUD::column('arabic_role')->type('text')->label('الدور');
+        CRUD::column('birth_date')->type('date')->label('تاريخ الميلاد');
+        CRUD::column('created_at')->type('datetime')->label('تاريخ الانضمام');
+    }
+
     protected function setupCreateOperation()
     {
         CRUD::setValidation(UserRequest::class);

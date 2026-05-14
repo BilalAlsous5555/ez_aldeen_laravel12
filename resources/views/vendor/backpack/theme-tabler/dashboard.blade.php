@@ -75,7 +75,7 @@
         ]);
     }
 
-    $committedStudents = $committedStudents->sortByDesc('present')->values();
+    $committedStudents = $committedStudents->sortByDesc('percentage')->values();
 
     $ageGroups = ['under8' => 0, 'bet8_12' => 0, 'bet12_18' => 0, 'over18' => 0];
     $now = now();
@@ -89,6 +89,7 @@
     }
 
     $recentSurahs = Studentachievement::where('type', 'surah_memorized')
+        ->whereHas('student', fn($q) => $q->whereNull('deleted_at'))
         ->whereIn('id', function ($q) {
             $q->select(\DB::raw('MAX(id)'))
                 ->from('student_achievements')
@@ -100,6 +101,7 @@
         ->get();
 
     $recentJuz = Studentachievement::where('type', 'juz_memorized')
+        ->whereHas('student', fn($q) => $q->whereNull('deleted_at'))
         ->whereIn('id', function ($q) {
             $q->select(\DB::raw('MAX(id)'))
                 ->from('student_achievements')
@@ -127,7 +129,7 @@
     <div class="col-sm-6 col-lg-3">
         <div class="card mb-3">
             <div class="card-body d-flex align-items-center">
-                <div class="me-3"><i class="la la-chalkboard la-3x text-success"></i></div>
+                <div class="me-3"><i class="la la-chalkboard-teacher la-3x text-success"></i></div>
                 <div>
                     <div class="text-muted small">إجمالي المدرسين</div>
                     <div class="fs-2 fw-bold">{{ $activeTeachersCount }}</div>
@@ -209,7 +211,7 @@
 <div class="row">
     <div class="col-md-12">
         <div class="card mb-3">
-            <div class="card-header"><h3 class="card-title"><i class="la la-chart-pie"></i> الفئات العمرية طلاب المعهد</h3></div>
+            <div class="card-header"><h3 class="card-title"><i class="la la-chart-pie"></i>   الفئات العمرية لطلاب المعهد </h3></div>
             <div class="card-body">
                 <div class="row text-center">
                     <div class="col-3">
@@ -253,7 +255,7 @@
                             <i class="la la-circle text-primary"></i>
                             {{ $halqa->name }}
                             <small class="text-muted ms-2">{{ $halqa->teacher?->name ?? '—' }}</small>
-                            <span class="badge bg-info ms-2">{{ $students->count() }} طالب</span>
+                            <span class="badge bg-white text-primary border border-primary rounded-pill fs-6 px-3 ms-2">{{ $students->count() }} طالب</span>
                         </h3>
                     </div>
                     <div class="table-responsive">

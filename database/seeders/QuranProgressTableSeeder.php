@@ -59,6 +59,7 @@ class QuranProgressTableSeeder extends Seeder
             ['student_id' => $students[19], 'halakat_id' => $halakat[9], 'teacher_id' => $teachers[9], 'surah_id' => 2, 'quran_page_number' => 2, 'from_aya' => 1, 'to_aya' => 5, 'evaluation' => 'جيد جدا', 'notes' => 'استمر', 'date' => '2026-04-01'],
         ];
 
-        DB::table('quran_progress')->insert($progress);
+        $timestamps = ['created_at' => now(), 'updated_at' => now()];
+        DB::table('quran_progress')->insert(array_map(fn ($p) => $p + $timestamps, $progress));
     }
 }
