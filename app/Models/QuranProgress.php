@@ -20,6 +20,7 @@ class QuranProgress extends Model
         'quran_page_number',
         'from_aya',
         'to_aya',
+        'juz_number',
         'evaluation',
         'notes',
         'date',
@@ -32,7 +33,48 @@ class QuranProgress extends Model
             'date' => 'date',
             'from_aya' => 'integer',
             'to_aya' => 'integer',
+            'juz_number' => 'array',
         ];
+    }
+
+    protected static function booted(): void
+    {
+        static::creating(function (self $progress) {
+            if (! $progress->halakat_id && $progress->student_id) {
+                $enrollment = \App\Models\HalakatStudent::with('halqa')
+                    ->where('student_id', $progress->student_id)
+                    ->where('is_active', true)
+                    ->first();
+                $progress->halakat_id = $enrollment?->halakat_id;
+            }
+            if (! $progress->teacher_id && $progress->halakat_id) {
+                $halaka = Halakat::find($progress->halakat_id);
+                $progress->teacher_id = $halaka?->teacher_id;
+            }
+        });
+
+        static::created(function (self $progress) {
+            if ($progress->surah_id) {
+                \App\Models\Studentachievement::checkAndCreateSurahAchievement($progress);
+            }
+
+            if ($progress->juz_number && $progress->memorize_type === 'حفظ' && $progress->evaluation !== 'اعادة') {
+                $juzList = is_array($progress->juz_number) ? $progress->juz_number : [$progress->juz_number];
+                foreach ($juzList as $juz) {
+                    try {
+                        \App\Models\Studentachievement::createJuzAchievement(
+                            $progress->student_id,
+                            $progress->teacher_id,
+                            $progress->halakat_id,
+                            (int) $juz,
+                            $progress->date->format('Y-m-d')
+                        );
+                    } catch (\Exception $e) {
+                        // juz already recorded — silently skip
+                    }
+                }
+            }
+        });
     }
 
     // -------------------------------------------------------------------------

@@ -93,13 +93,18 @@ class Studentachievement extends Model
             return;
         }
 
-        // شرط 2: هل to_aya هي آخر آية في السورة؟
+        // شرط 2: التقييم لا يمكن أن يكون "اعادة" (الطالب لم ينجح)
+        if ($progress->evaluation === 'اعادة') {
+            return;
+        }
+
+        // شرط 3: هل to_aya هي آخر آية في السورة؟
         $surah = Surah::find($progress->surah_id);
         if (! $surah || $progress->to_aya !== $surah->aya_count) {
             return;
         }
 
-        // شرط 3: هل هذا الإنجاز مسجَّل مسبقاً؟ (لا نكرر)
+        // شرط 4: هل هذا الإنجاز مسجَّل مسبقاً؟ (لا نكرر)
         $exists = static::where('student_id', $progress->student_id)
             ->where('type', 'surah_memorized')
             ->where('surah_id', $progress->surah_id)

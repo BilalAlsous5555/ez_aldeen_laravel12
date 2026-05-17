@@ -41,28 +41,6 @@ class QuranProgressCrudController extends CrudController
     protected function setupListOperation()
     {
         $this->crud->addClause('whereHas', 'student', fn ($q) => $q->whereNull('deleted_at'));
-        $this->crud->addClause('whereHas', 'halqa', fn ($q) => $q->whereNull('deleted_at'));
-        $this->crud->addClause('whereHas', 'teacher', fn ($q) => $q->whereNull('deleted_at'));
-
-        CRUD::column('teacher')->wrapper([
-            'href' => function ($crud, $column, $entry) {
-                return backpack_url('user/'.$entry->teacher_id.'/show');
-            },
-        ])->label('اسم المدرس')->searchLogic(function ($query, $column, $searchTerm) {
-            $query->orWhereHas('teacher', function ($q) use ($searchTerm) {
-                $q->where('name', 'like', '%'.$searchTerm.'%');
-            });
-        });
-
-        CRUD::column('halqa')->wrapper([
-            'href' => function ($crud, $column, $entry) {
-                return backpack_url('halakat/'.$entry->halakat_id.'/show');
-            },
-        ])->label('اسم الحلقة')->searchLogic(function ($query, $column, $searchTerm) {
-            $query->orWhereHas('halqa', function ($q) use ($searchTerm) {
-                $q->where('name', 'like', '%'.$searchTerm.'%');
-            });
-        });
 
         CRUD::column('student')->wrapper([
             'href' => function ($crud, $column, $entry) {
@@ -98,8 +76,17 @@ class QuranProgressCrudController extends CrudController
         CRUD::column('to_aya')->label('الى الايه')->searchLogic(function ($query, $column, $searchTerm) {
             $query->orWhere('to_aya', 'like', '%'.$searchTerm.'%');
         });
-        CRUD::column('evaluation')->label('تقييم الحفظ')->searchLogic(function ($query, $column, $searchTerm) {
+        CRUD::column('evaluation')->label('تقييم الحفظ او المراجعة')->searchLogic(function ($query, $column, $searchTerm) {
             $query->orWhere('evaluation', 'like', '%'.$searchTerm.'%');
+        });
+        CRUD::column('memorize_type')->label('نوع الحفظ');
+        CRUD::column('juz_number')->label('رقم الجزء')->format(function ($value) {
+            if (is_null($value)) {
+                return '—';
+            }
+            $arr = is_array($value) ? $value : json_decode($value, true);
+
+            return is_array($arr) ? implode(', ', $arr) : $value;
         });
         CRUD::column('notes')->label('ملاحظات المدرسين')->searchLogic(function ($query, $column, $searchTerm) {
             $query->orWhere('notes', 'like', '%'.$searchTerm.'%');
@@ -117,12 +104,71 @@ class QuranProgressCrudController extends CrudController
     protected function setupCreateOperation()
     {
         CRUD::setValidation(QuranProgressRequest::class);
-        CRUD::setFromDb(); // set fields from db columns.
 
-        /**
-         * Fields can be defined using the fluent syntax:
-         * - CRUD::field('price')->type('number');
-         */
+        $students = \App\Models\User::where('role', 'student')
+            ->whereNull('deleted_at')
+            ->orderBy('name')
+            ->pluck('name', 'id');
+
+        $surahs = \App\Models\Surah::orderBy('number')->pluck('name', 'id');
+
+        CRUD::field('student_id')
+            ->type('select_from_array')
+            ->label('الطالب')
+            ->options($students)
+            ->wrapper(['class' => 'form-group col-md-4']);
+
+        CRUD::field('surah_id')
+            ->type('select_from_array')
+            ->label('السورة')
+            ->options(['' => '—'] + $surahs->toArray())
+            ->wrapper(['class' => 'form-group col-md-4']);
+
+        CRUD::field('quran_page_number')
+            ->type('number')
+            ->label('رقم الصفحة')
+            ->wrapper(['class' => 'form-group col-md-3']);
+
+        CRUD::field('from_aya')
+            ->type('number')
+            ->label('من الآية')
+            ->wrapper(['class' => 'form-group col-md-3']);
+
+        CRUD::field('to_aya')
+            ->type('number')
+            ->label('إلى الآية')
+            ->wrapper(['class' => 'form-group col-md-3']);
+
+        CRUD::field('memorize_type')
+            ->type('select_from_array')
+            ->label('نوع الحفظ')
+            ->options(['حفظ' => 'حفظ', 'مراجعة' => 'مراجعة'])
+            ->wrapper(['class' => 'form-group col-md-3']);
+
+        CRUD::field('juz_number')
+            ->type('view')
+            ->view('vendor.backpack.crud.fields.juz_number');
+
+        CRUD::field('evaluation')
+            ->type('select_from_array')
+            ->label('تقييم الحفظ او المراجعة')
+            ->options(['ممتاز' => 'ممتاز', 'جيد جدا' => 'جيد جدا', 'جيد' => 'جيد', 'اعادة' => 'اعادة'])
+            ->wrapper(['class' => 'form-group col-md-4']);
+
+        CRUD::field('notes')
+            ->type('textarea')
+            ->label('ملاحظات')
+            ->wrapper(['class' => 'form-group col-md-8']);
+
+        CRUD::field('date')
+            ->type('date')
+            ->label('التاريخ')
+            ->value(now()->format('Y-m-d'))
+            ->wrapper(['class' => 'form-group col-md-4']);
+
+        CRUD::field('auto_fill')
+            ->type('view')
+            ->view('vendor.backpack.crud.fields.quran_progress_auto_fill');
     }
 
     /**

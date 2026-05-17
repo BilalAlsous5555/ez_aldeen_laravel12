@@ -39,6 +39,27 @@ Route::group([
 
         return response()->json($halakat->pluck('name', 'id'));
     })->name('halakat.byRole');
+    Route::get('students/{student}/halaka-info', function ($studentId) {
+        $student = \App\Models\User::with('activeEnrollment.halqa.teacher')->findOrFail($studentId);
+        $halaka = $student->activeEnrollment?->halqa;
+
+        return response()->json([
+            'halakat_id' => $halaka?->id,
+            'halaka_name' => $halaka?->name,
+            'teacher_id' => $halaka?->teacher?->id,
+            'teacher_name' => $halaka?->teacher?->name,
+        ]);
+    })->name('students.halaka-info');
+
+    Route::get('halakat/{halaka}/teacher-info', function ($halakaId) {
+        $halaka = \App\Models\Halakat::with('teacher')->findOrFail($halakaId);
+
+        return response()->json([
+            'teacher_id' => $halaka->teacher?->id,
+            'teacher_name' => $halaka->teacher?->name,
+        ]);
+    })->name('halakat.teacher-info');
+
     Route::crud('pending-transfer', 'PendingTransferCrudController');
     Route::crud('quran-progress', 'QuranProgressCrudController');
     Route::crud('attendance', 'AttendanceCrudController');
