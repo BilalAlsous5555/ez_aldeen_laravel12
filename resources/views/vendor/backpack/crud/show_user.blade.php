@@ -8,7 +8,7 @@
 
     $lastProgress = $student->progress()->with('surah')->where('memorize_type', 'حفظ')->latest('id')->first();
 
-    $currentSurahs = collect();
+$currentSurahs = collect();
     $currentJuz = collect();
     if ($currentHalqaId) {
         $currentSurahs = Studentachievement::where('student_id', $student->id)
@@ -16,38 +16,38 @@
             ->where('halakat_id', $currentHalqaId)
             ->with('surah')
             ->get();
+
         $currentJuz = Studentachievement::where('student_id', $student->id)
             ->where('type', 'juz_memorized')
             ->where('halakat_id', $currentHalqaId)
             ->get();
-    }
 
-    $revisionSurahs = collect();
-    $revisionJuz = collect();
-    if ($currentHalqaId) {
         $revisionSurahs = $student->progress()
             ->where('memorize_type', 'مراجعة')
             ->whereNotNull('surah_id')
             ->where('halakat_id', $currentHalqaId)
             ->with('surah')
+            ->orderBy('date', 'desc')
             ->get()
             ->unique('surah_id');
 
-        $revisionJuz = $student->progress()
+        $revisionJuzProgress = $student->progress()
             ->where('memorize_type', 'مراجعة')
             ->whereNotNull('juz_number')
             ->where('halakat_id', $currentHalqaId)
-            ->get()
-            ->pluck('juz_number')
-            ->flatten()
-            ->unique()
-            ->sort()
-            ->values();
+            ->with('surah')
+            ->orderBy('date', 'desc')
+            ->get();
     }
 
     $totalAtt = $student->attendances()->count();
     $presentAtt = $student->attendances()->where('status', 'حاضر')->count();
     $attPct = $totalAtt > 0 ? round(($presentAtt / $totalAtt) * 100) : 0;
+
+    $monthlyAtt = $student->attendances()->whereMonth('attendance_date', now()->month)->whereYear('attendance_date', now()->year);
+    $monthlyTotal = $monthlyAtt->count();
+    $monthlyPresent = $student->attendances()->where('status', 'حاضر')->whereMonth('attendance_date', now()->month)->whereYear('attendance_date', now()->year)->count();
+    $monthlyPct = $monthlyTotal > 0 ? round(($monthlyPresent / $monthlyTotal) * 100) : 0;
 
     $oldEnrollments = $student
         ->enrollments()
@@ -199,11 +199,18 @@
                     </div>
                     <div class="card-body">
                         @if ($currentSurahs->isNotEmpty())
-                            <div class="d-flex flex-wrap gap-2">
-                                @foreach ($currentSurahs as $ach)
-                                    <span
-                                        class="badge bg-white text-primary border border-primary rounded-pill fs-6 px-3">{{ $ach->surah?->name ?? '—' }}</span>
-                                @endforeach
+                            <div class="table-responsive">
+                                <table class="table table-vcenter table-sm">
+                                    <thead><tr><th>السورة</th><th>تاريخ الإنجاز</th></tr></thead>
+                                    <tbody>
+                                        @foreach ($currentSurahs as $ach)
+                                            <tr>
+                                                <td>{{ $ach->surah?->name ?? '—' }}</td>
+                                                <td>{{ $ach->achieved_at?->format('Y-m-d') ?? '—' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             </div>
                         @else
                             <div class="text-muted">—</div>
@@ -213,16 +220,22 @@
 
                 <div class="card mb-3">
                     <div class="card-header">
-                        <h3 class="card-title"><i class="la la-layer-group"></i>الأجزاء التي تم حفظها</h3>
+                        <h3 class="card-title"><i class="la la-layer-group"></i> الأجزاء التي تم حفظها</h3>
                     </div>
                     <div class="card-body">
                         @if ($currentJuz->isNotEmpty())
-                            <div class="d-flex flex-wrap gap-2">
-                                @foreach ($currentJuz as $ach)
-                                    <span
-                                        class="badge bg-white text-success border border-success rounded-pill fs-6 px-3">الجزء
-                                        {{ $ach->juz_number }}</span>
-                                @endforeach
+                            <div class="table-responsive">
+                                <table class="table table-vcenter table-sm">
+                                    <thead><tr><th>الجزء</th><th>تاريخ الإنجاز</th></tr></thead>
+                                    <tbody>
+                                        @foreach ($currentJuz as $ach)
+                                            <tr>
+                                                <td>الجزء {{ $ach->juz_number }}</td>
+                                                <td>{{ $ach->achieved_at?->format('Y-m-d') ?? '—' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             </div>
                         @else
                             <div class="text-muted">—</div>
@@ -239,11 +252,20 @@
                     </div>
                     <div class="card-body">
                         @if ($revisionSurahs->isNotEmpty())
-                            <div class="d-flex flex-wrap gap-2">
-                                @foreach ($revisionSurahs as $prog)
-                                    <span
-                                        class="badge bg-white text-warning border border-warning rounded-pill fs-6 px-3">{{ $prog->surah?->name ?? '—' }}</span>
-                                @endforeach
+                            <div class="table-responsive">
+                                <table class="table table-vcenter table-sm">
+                                    <thead><tr><th>السورة</th><th>التقييم</th><th>ملاحظات</th><th>التاريخ</th></tr></thead>
+                                    <tbody>
+                                        @foreach ($revisionSurahs as $prog)
+                                            <tr>
+                                                <td>{{ $prog->surah?->name ?? '—' }}</td>
+                                                <td>{{ $prog->evaluation ?? '—' }}</td>
+                                                <td>{{ $prog->notes ?? '—' }}</td>
+                                                <td>{{ $prog->date?->format('Y-m-d') ?? '—' }}</td>
+                                            </tr>
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             </div>
                         @else
                             <div class="text-muted">—</div>
@@ -256,12 +278,23 @@
                         <h3 class="card-title"><i class="la la-layer-group"></i> الأجزاء التي تمت مراجعتها</h3>
                     </div>
                     <div class="card-body">
-                        @if ($revisionJuz->isNotEmpty())
-                            <div class="d-flex flex-wrap gap-2">
-                                @foreach ($revisionJuz as $juz)
-                                    <span class="badge bg-white text-info border border-info rounded-pill fs-6 px-3">الجزء
-                                        {{ $juz }}</span>
-                                @endforeach
+                        @if ($revisionJuzProgress->isNotEmpty())
+                            <div class="table-responsive">
+                                <table class="table table-vcenter table-sm">
+                                    <thead><tr><th>الجزء</th><th>التقييم</th><th>ملاحظات</th><th>التاريخ</th></tr></thead>
+                                    <tbody>
+                                        @foreach ($revisionJuzProgress as $prog)
+                                            @foreach (collect($prog->juz_number) as $jz)
+                                                <tr>
+                                                    <td>الجزء {{ $jz }}</td>
+                                                    <td>{{ $prog->evaluation ?? '—' }}</td>
+                                                    <td>{{ $prog->notes ?? '—' }}</td>
+                                                    <td>{{ $prog->date?->format('Y-m-d') ?? '—' }}</td>
+                                                </tr>
+                                            @endforeach
+                                        @endforeach
+                                    </tbody>
+                                </table>
                             </div>
                         @else
                             <div class="text-muted">—</div>
@@ -282,6 +315,22 @@
                         </div>
                         <div class="text-muted small mt-1">حضور: {{ $presentAtt }} | غياب: {{ $totalAtt - $presentAtt }}
                             | إجمالي: {{ $totalAtt }}</div>
+                    </div>
+                </div>
+
+                <div class="card mb-3">
+                    <div class="card-header">
+                        <h3 class="card-title"><i class="la la-calendar-check"></i> نسبة الحضور الشهرية</h3>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex align-items-center">
+                            <div class="progress flex-grow-1" style="height:24px">
+                                <div class="progress-bar {{ $monthlyPct >= 80 ? 'bg-success' : ($monthlyPct >= 60 ? 'bg-primary' : ($monthlyPct >= 40 ? 'bg-warning' : 'bg-danger')) }}"
+                                    style="width: {{ $monthlyPct }}%">{{ $monthlyPct }}%</div>
+                            </div>
+                        </div>
+                        <div class="text-muted small mt-1">حضور: {{ $monthlyPresent }} | غياب: {{ $monthlyTotal - $monthlyPresent }}
+                            | إجمالي: {{ $monthlyTotal }} — {{ now()->format('F Y') }}</div>
                     </div>
                 </div>
 

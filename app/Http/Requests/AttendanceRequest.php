@@ -25,31 +25,29 @@ class AttendanceRequest extends FormRequest
     public function rules()
     {
         return [
-            // 'name' => 'required|min:5|max:255'
+            'student_id' => 'required|exists:users,id',
+            'halakat_id' => 'required|exists:halakat,id',
+            'attendance_date' => 'required|date',
+            'status' => 'required|in:حاضر,غائب',
+            'excused_reason' => 'nullable|string|max:500',
         ];
     }
 
-    /**
-     * Get the validation attributes that apply to the request.
-     *
-     * @return array
-     */
     public function attributes()
     {
         return [
-            //
+            'student_id' => 'الطالب',
+            'halakat_id' => 'الحلقة',
+            'attendance_date' => 'تاريخ الحضور',
+            'status' => 'حالة الحضور',
+            'excused_reason' => 'عذر الغياب',
         ];
     }
 
-    /**
-     * Get the validation messages that apply to the request.
-     *
-     * @return array
-     */
     public function messages()
     {
         return [
-            //
+            'halakat_id.required' => 'يجب تحديد حلقة الطالب',
         ];
     }
 }

@@ -96,12 +96,41 @@ class AttendanceCrudController extends CrudController
     protected function setupCreateOperation()
     {
         CRUD::setValidation(AttendanceRequest::class);
-        CRUD::setFromDb(); // set fields from db columns.
 
-        /**
-         * Fields can be defined using the fluent syntax:
-         * - CRUD::field('price')->type('number');
-         */
+        $students = \App\Models\User::where('role', 'student')
+            ->whereNull('deleted_at')
+            ->orderBy('name')
+            ->pluck('name', 'id');
+
+        CRUD::field('student_id')
+            ->type('select_from_array')
+            ->label('الطالب')
+            ->options($students)
+            ->wrapper(['class' => 'form-group col-md-4']);
+
+        CRUD::field('halakat_id')
+            ->type('hidden')
+            ->default('');
+
+        CRUD::field('attendance_date')
+            ->type('date')
+            ->label('تاريخ الحضور')
+            ->value(now()->format('Y-m-d'))
+            ->wrapper(['class' => 'form-group col-md-4']);
+
+        CRUD::field('status')
+            ->type('select_from_array')
+            ->label('حالة الحضور')
+            ->options(['حاضر' => 'حاضر', 'غائب' => 'غائب'])
+            ->wrapper(['class' => 'form-group col-md-4']);
+
+        CRUD::field('excused_reason')
+            ->type('textarea')
+            ->label('عذر الغياب');
+
+        CRUD::field('attendance_auto_fill')
+            ->type('view')
+            ->view('vendor.backpack.crud.fields.attendance_auto_fill');
     }
 
     /**
