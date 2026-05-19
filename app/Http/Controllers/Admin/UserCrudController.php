@@ -92,35 +92,44 @@ class UserCrudController extends CrudController
          * 9- Export buttons
          * 10- Details row
          */
-        // Status column to show deleted/active
-        CRUD::column('deleted_at')
-            ->type('boolean')
-            ->label('الحالة')
-            ->options([0 => 'نشط', 1 => 'محذوف'])
-            ->wrapper([
-                'class' => function ($crud, $column, $entry) {
-                    return $entry->trashed() ? 'text-danger' : 'text-success';
-                },
-            ]);
+        if (! in_array(request('filter'), ['active_students', 'active_teachers'])) {
+            CRUD::column('deleted_at')
+                ->type('boolean')
+                ->label('الحالة')
+                ->options([0 => 'نشط', 1 => 'محذوف'])
+                ->wrapper([
+                    'class' => function ($crud, $column, $entry) {
+                        return $entry->trashed() ? 'text-danger' : 'text-success';
+                    },
+                ]);
+        }
 
-        // Role column with search for Arabic and English
-        CRUD::column('arabic_role')->type('text')->label('الدور')->searchLogic(function ($query, $column, $searchTerm) {
-            $arabicToEnglish = [
-                'مدير' => 'admin',
-                'مدرس' => 'teacher',
-                'طالب' => 'student',
-            ];
-            if (isset($arabicToEnglish[$searchTerm])) {
-                $query->orWhere('role', $arabicToEnglish[$searchTerm]);
-            } else {
-                $query->orWhere('role', 'like', '%'.$searchTerm.'%');
-            }
-        });
+        // // Role column with search for Arabic and English
+        // CRUD::column('arabic_role')->type('text')->label('الدور')->searchLogic(function ($query, $column, $searchTerm) {
+        //     $arabicToEnglish = [
+        //         'مدير' => 'admin',
+        //         'مدرس' => 'teacher',
+        //         'طالب' => 'student',
+        //     ];
+        //     if (isset($arabicToEnglish[$searchTerm])) {
+        //         $query->orWhere('role', $arabicToEnglish[$searchTerm]);
+        //     } else {
+        //         $query->orWhere('role', 'like', '%'.$searchTerm.'%');
+        //     }
+        // });
 
         // Name column with search
-        CRUD::column('name')->type('text')->label('الاسم')->searchLogic(function ($query, $column, $searchTerm) {
+        $nameCol = CRUD::column('name')->type('text')->label('الاسم')->searchLogic(function ($query, $column, $searchTerm) {
             $query->orWhere('name', 'like', '%'.$searchTerm.'%');
         });
+
+        if (request('filter') === 'active_students') {
+            $nameCol->wrapper([
+                'href' => function ($crud, $column, $entry) {
+                    return backpack_url('user/'.$entry->id.'/show');
+                },
+            ]);
+        }
 
         $hideTeacher = in_array(request('filter'), ['active_teachers', 'deleted_teachers', 'deleted_students', 'without_halqa']);
         $hideHalqa = in_array(request('filter'), ['deleted_teachers', 'deleted_students', 'without_halqa']);
@@ -131,7 +140,7 @@ class UserCrudController extends CrudController
                 ->function_name('getActiveHalqaName')
                 ->label('الحلقة الحالية')
                 ->wrapper([
-                    'href' => function ($crud, $column, $entry) {
+                    'text' => function ($crud, $column, $entry) {
                         if ($entry->isTeacher() && $entry->halqa) {
                             return backpack_url('halakat/'.$entry->halqa->id.'/show');
                         }
@@ -156,7 +165,7 @@ class UserCrudController extends CrudController
                 ->function_name('getActiveHalqaTeacherName')
                 ->label('المدرس')
                 ->wrapper([
-                    'href' => function ($crud, $column, $entry) {
+                    'text' => function ($crud, $column, $entry) {
                         if ($entry->activeEnrollment?->halqa?->teacher_id) {
                             return backpack_url('user/'.$entry->activeEnrollment->halqa->teacher_id.'/show');
                         }
@@ -170,10 +179,10 @@ class UserCrudController extends CrudController
                     });
                 });
         }
-        // Other columns with search
-        CRUD::column('phone')->type('text')->label('رقم الهاتف')->searchLogic(function ($query, $column, $searchTerm) {
-            $query->orWhere('phone', 'like', '%'.$searchTerm.'%');
-        });
+        // // Other columns with search
+        // CRUD::column('phone')->type('text')->label('رقم الهاتف')->searchLogic(function ($query, $column, $searchTerm) {
+        //     $query->orWhere('phone', 'like', '%'.$searchTerm.'%');
+        // });
         CRUD::column('birth_date')->type('date')->label('تاريخ الولادة');
         CRUD::column('created_at')->type('date')->label('تاريخ الانضمام');
 

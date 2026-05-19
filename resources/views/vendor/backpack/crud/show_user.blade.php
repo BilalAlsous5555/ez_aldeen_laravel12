@@ -22,24 +22,28 @@
             ->get();
     }
 
-    $revisionSurahs = $student
-        ->progress()
-        ->where('memorize_type', 'مراجعة')
-        ->whereNotNull('surah_id')
-        ->with('surah')
-        ->get()
-        ->unique('surah_id');
+    $revisionSurahs = collect();
+    $revisionJuz = collect();
+    if ($currentHalqaId) {
+        $revisionSurahs = $student->progress()
+            ->where('memorize_type', 'مراجعة')
+            ->whereNotNull('surah_id')
+            ->where('halakat_id', $currentHalqaId)
+            ->with('surah')
+            ->get()
+            ->unique('surah_id');
 
-    $revisionJuz = $student
-        ->progress()
-        ->where('memorize_type', 'مراجعة')
-        ->whereNotNull('juz_number')
-        ->get()
-        ->pluck('juz_number')
-        ->flatten()
-        ->unique()
-        ->sort()
-        ->values();
+        $revisionJuz = $student->progress()
+            ->where('memorize_type', 'مراجعة')
+            ->whereNotNull('juz_number')
+            ->where('halakat_id', $currentHalqaId)
+            ->get()
+            ->pluck('juz_number')
+            ->flatten()
+            ->unique()
+            ->sort()
+            ->values();
+    }
 
     $totalAtt = $student->attendances()->count();
     $presentAtt = $student->attendances()->where('status', 'حاضر')->count();
