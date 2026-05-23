@@ -237,25 +237,25 @@
                         <div class="col-3">
                             <div class="p-3">
                                 <div class="fs-1 fw-bold text-warning">{{ $ageGroups['under8'] }}</div>
-                                <div class="text-muted small">دون 8 سنوات</div>
+                                <div class="text-muted small text-center">دون 8 سنوات</div>
                             </div>
                         </div>
                         <div class="col-3">
                             <div class="p-3">
                                 <div class="fs-1 fw-bold text-info">{{ $ageGroups['bet8_12'] }}</div>
-                                <div class="text-muted small">من 8 إلى 12</div>
+                                <div class="text-muted small text-center" >من 8 إلى 12</div>
                             </div>
                         </div>
                         <div class="col-3">
                             <div class="p-3">
                                 <div class="fs-1 fw-bold text-primary">{{ $ageGroups['bet12_18'] }}</div>
-                                <div class="text-muted small">من 12 إلى 18</div>
+                                <div class="text-muted small text-center">من 12 إلى 18</div>
                             </div>
                         </div>
                         <div class="col-3">
                             <div class="p-3">
                                 <div class="fs-1 fw-bold text-success">{{ $ageGroups['over18'] }}</div>
-                                <div class="text-muted small">فوق 18</div>
+                                <div class="text-muted small text-center">فوق 18</div>
                             </div>
                         </div>
                     </div>
@@ -287,9 +287,9 @@
                                         <th>اسم الطالب</th>
                                         <th>الحضور</th>
                                         <th>عذر الغياب</th>
-                                        <th>عدد الحضور هذا الشهر</th>
-                                        <th>عدد الغياب هذا الشهر</th>
-                                        <th>نسبة الحضور هذا الشهر</th>
+                                        <th>عدد الحضور</th>
+                                        <th>عدد الغياب</th>
+                                        <th>نسبة الحضور في الحلقة</th>
                                     </tr>
                                 </thead>
                                 <tbody>

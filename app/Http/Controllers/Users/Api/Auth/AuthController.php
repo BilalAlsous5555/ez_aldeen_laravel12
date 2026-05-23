@@ -15,14 +15,14 @@ class AuthController extends Controller
     {
         if(!Auth::attempt($request->validated()))
         {
-            return response()->json(['message'=>'Invalid email or password'] ,401 );
+            return response()->json(['message'=>'كلمة المرور او البريد الالكتروني غير صحيح'] ,401 );
         }
         else
         {
             $user = User::where('email',$request->email)->first();
             $token = $user->createToken('auth_Token')->plainTextToken;
             return response()->json([
-                'message'=>'User Loged in successfully ! ',
+                'message'=>' اهلا بك ' .  $user->name,
                 'token' => $token ,
                 'user' => $user ,
             ],201);

@@ -44,10 +44,14 @@ $currentSurahs = collect();
     $presentAtt = $student->attendances()->where('status', 'حاضر')->count();
     $attPct = $totalAtt > 0 ? round(($presentAtt / $totalAtt) * 100) : 0;
 
-    $monthlyAtt = $student->attendances()->whereMonth('attendance_date', now()->month)->whereYear('attendance_date', now()->year);
-    $monthlyTotal = $monthlyAtt->count();
-    $monthlyPresent = $student->attendances()->where('status', 'حاضر')->whereMonth('attendance_date', now()->month)->whereYear('attendance_date', now()->year)->count();
-    $monthlyPct = $monthlyTotal > 0 ? round(($monthlyPresent / $monthlyTotal) * 100) : 0;
+    $halqaAttTotal = 0;
+    $halqaAttPresent = 0;
+    $halqaAttPct = 0;
+    if ($currentHalqaId) {
+        $halqaAttTotal = $student->attendances()->where('halakat_id', $currentHalqaId)->count();
+        $halqaAttPresent = $student->attendances()->where('halakat_id', $currentHalqaId)->where('status', 'حاضر')->count();
+        $halqaAttPct = $halqaAttTotal > 0 ? round(($halqaAttPresent / $halqaAttTotal) * 100) : 0;
+    }
 
     $oldEnrollments = $student
         ->enrollments()
@@ -318,21 +322,23 @@ $currentSurahs = collect();
                     </div>
                 </div>
 
+                @if($currentHalqaId)
                 <div class="card mb-3">
                     <div class="card-header">
-                        <h3 class="card-title"><i class="la la-calendar-check"></i> نسبة الحضور الشهرية</h3>
+                        <h3 class="card-title"><i class="la la-calendar-check"></i> نسبة الحضور في الحلقة</h3>
                     </div>
                     <div class="card-body">
                         <div class="d-flex align-items-center">
                             <div class="progress flex-grow-1" style="height:24px">
-                                <div class="progress-bar {{ $monthlyPct >= 80 ? 'bg-success' : ($monthlyPct >= 60 ? 'bg-primary' : ($monthlyPct >= 40 ? 'bg-warning' : 'bg-danger')) }}"
-                                    style="width: {{ $monthlyPct }}%">{{ $monthlyPct }}%</div>
+                                <div class="progress-bar {{ $halqaAttPct >= 80 ? 'bg-success' : ($halqaAttPct >= 60 ? 'bg-primary' : ($halqaAttPct >= 40 ? 'bg-warning' : 'bg-danger')) }}"
+                                    style="width: {{ $halqaAttPct }}%">{{ $halqaAttPct }}%</div>
                             </div>
                         </div>
-                        <div class="text-muted small mt-1">حضور: {{ $monthlyPresent }} | غياب: {{ $monthlyTotal - $monthlyPresent }}
-                            | إجمالي: {{ $monthlyTotal }} — {{ now()->format('F Y') }}</div>
+                        <div class="text-muted small mt-1">حضور: {{ $halqaAttPresent }} | غياب: {{ $halqaAttTotal - $halqaAttPresent }}
+                            | إجمالي: {{ $halqaAttTotal }}</div>
                     </div>
                 </div>
+                @endif
 
                 <div class="card mb-3">
                     <div class="card-header">

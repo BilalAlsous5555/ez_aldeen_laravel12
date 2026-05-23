@@ -14,7 +14,7 @@ return new class extends Migration
         Schema::create('attendances', function (Blueprint $table) {
             $table->id();
 
-            $table->date('attendance_date');
+            $table->date('attendance_date')->default(now());
             $table->enum('status', ['حاضر', 'غائب']);
             $table->string('excused_reason', 255)->nullable();
 
