@@ -35,6 +35,15 @@ RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
 # Set permissions
 RUN chown -R www-data:www-data /var/www/html/storage /var/www/html/bootstrap/cache
 
+# Copy entrypoint script
+COPY docker-entrypoint.sh /usr/local/bin/docker-entrypoint.sh
+RUN chmod +x /usr/local/bin/docker-entrypoint.sh
+
+# Ensure storage link exists
+RUN php artisan storage:link || true
+
+ENTRYPOINT ["/usr/local/bin/docker-entrypoint.sh"]
+
 # Expose port
 EXPOSE 9000
 

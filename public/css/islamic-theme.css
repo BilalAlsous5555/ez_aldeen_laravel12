@@ -26,8 +26,25 @@
 /* Arabic Font for All Page */
 /* ======================== */
 body,
-body * {
+body *:not(.la):not([class*="la-"]):not(i.la):not(span.la):not(i[class*="la-"]):not(span[class*="la-"]) {
     font-family: 'Amiri', 'Traditional Arabic', 'Simplified Arabic', serif !important;
+}
+
+/* Force Line Awesome icon font — must win over any Amiri override */
+i.la,
+span.la,
+i[class*="la-"],
+span[class*="la-"],
+.la,
+[class*="la-"] {
+    font-family: 'Line Awesome Free', 'Line Awesome' !important;
+    font-style: normal !important;
+    font-variant: normal !important;
+    text-rendering: auto !important;
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+    line-height: 1 !important;
+    speak: none !important;
 }
 
 /* ======================== */
@@ -206,3 +223,34 @@ td[data-action-column="true"] {
 ::-webkit-scrollbar-track { background: #f8f9fa; }
 ::-webkit-scrollbar-thumb { background: #2d8a4a; border-radius: 4px; }
 ::-webkit-scrollbar-thumb:hover { background: #1a5c3a; }
+
+/* ======================== */
+/* Age Groups Widget Centering */
+/* ======================== */
+.age-groups-card .card-body .row {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+}
+.age-groups-card .card-body .row > .col-3 {
+    flex: 0 0 auto;
+    width: 25%;
+    text-align: center;
+}
+.age-groups-card .card-body .row > .col-3 > div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+/* ======================== */
+/* Teacher name gold badge  */
+/* ======================== */
+.badge.bg-success-lt {
+    background-color: rgba(212, 175, 55, 0.15) !important;
+    color: #d4af37 !important;
+    font-size: 0.95em !important;
+    font-weight: 700 !important;
+    padding: 0.35em 0.75em !important;
+}

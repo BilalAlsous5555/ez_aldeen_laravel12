@@ -1,5 +1,21 @@
 @extends(backpack_view('blank'))
 
+@section('after_styles')
+<style>
+    i.la, span.la, i[class*="la-"], span[class*="la-"],
+    .la, [class*="la-"] {
+        font-family: 'Line Awesome Free', 'Line Awesome' !important;
+        font-style: normal !important;
+        font-variant: normal !important;
+        text-rendering: auto !important;
+        -webkit-font-smoothing: antialiased !important;
+        -moz-osx-font-smoothing: grayscale !important;
+        line-height: 1 !important;
+        speak: none !important;
+    }
+</style>
+@endsection
+
 @php
     use App\Models\User;
     use App\Models\Halakat;
@@ -84,7 +100,7 @@
     $ageGroups = ['under8' => 0, 'bet8_12' => 0, 'bet12_18' => 0, 'over18' => 0];
     $now = now();
     foreach ($allStudents as $student) {
-        $age = $student->birth_date ? $now->diffInYears($student->birth_date) : null;
+        $age = $student->birth_date ? \Carbon\Carbon::parse($student->birth_date)->diffInYears($now) : null;
         if ($age === null) {
             continue;
         }
@@ -183,7 +199,7 @@
         <div class="col-sm-6 col-lg-3">
             <div class="card mb-3">
                 <div class="card-body d-flex align-items-center">
-                    <div class="me-3"><i class="la la-book la-3x text-primary"></i></div>
+                    <div class="me-3"><i class="la la-book-open la-3x text-purple" style="color: #7c3aed;"></i></div>
                     <div>
                         <div class="text-muted small">السور المكتملة</div>
                         <div class="fs-2 fw-bold">{{ $totalSurahsCount }}</div>
@@ -228,34 +244,38 @@
 
     <div class="row">
         <div class="col-md-12">
-            <div class="card mb-3">
+            <div class="card mb-3 age-groups-card">
                 <div class="card-header">
-                    <h3 class="card-title"><i class="la la-chart-pie"></i> الفئات العمرية لطلاب المعهد </h3>
+                    <h3 class="card-title"><i class="la la-chart-pie"></i> الفئات العمرية لطلاب المعهد</h3>
                 </div>
                 <div class="card-body">
-                    <div class="row text-center">
-                        <div class="col-3">
-                            <div class="p-3">
+                    <div class="row text-center justify-content-center">
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 d-flex flex-column align-items-center justify-content-center">
+                                <div class="mb-2"><i class="la la-child la-2x text-warning"></i></div>
                                 <div class="fs-1 fw-bold text-warning">{{ $ageGroups['under8'] }}</div>
-                                <div class="text-muted small text-center">دون 8 سنوات</div>
+                                <div class="text-muted fw-semibold">دون 8 سنوات</div>
                             </div>
                         </div>
-                        <div class="col-3">
-                            <div class="p-3">
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 d-flex flex-column align-items-center justify-content-center">
+                                <div class="mb-2"><i class="la la-user la-2x text-info"></i></div>
                                 <div class="fs-1 fw-bold text-info">{{ $ageGroups['bet8_12'] }}</div>
-                                <div class="text-muted small text-center" >من 8 إلى 12</div>
+                                <div class="text-muted fw-semibold">من 8 إلى 12</div>
                             </div>
                         </div>
-                        <div class="col-3">
-                            <div class="p-3">
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 d-flex flex-column align-items-center justify-content-center">
+                                <div class="mb-2"><i class="la la-male la-2x text-primary"></i></div>
                                 <div class="fs-1 fw-bold text-primary">{{ $ageGroups['bet12_18'] }}</div>
-                                <div class="text-muted small text-center">من 12 إلى 18</div>
+                                <div class="text-muted fw-semibold">من 12 إلى 18</div>
                             </div>
                         </div>
-                        <div class="col-3">
-                            <div class="p-3">
+                        <div class="col-6 col-md-3">
+                            <div class="p-3 d-flex flex-column align-items-center justify-content-center">
+                                <div class="mb-2"><i class="la la-user-secret la-2x text-success"></i></div>
                                 <div class="fs-1 fw-bold text-success">{{ $ageGroups['over18'] }}</div>
-                                <div class="text-muted small text-center">فوق 18</div>
+                                <div class="text-muted fw-semibold">فوق 18</div>
                             </div>
                         </div>
                     </div>
@@ -274,9 +294,13 @@
                             <h3 class="card-title">
                                 <i class="la la-circle text-primary"></i>
                                 {{ $halqa->name }}
-                                <small class="text-muted ms-2">{{ $halqa->teacher?->name ?? '—' }}</small>
-                                <span
-                                    class="badge bg-white text-primary border border-primary rounded-pill fs-6 px-3 ms-2">{{ $students->count() }}
+                                @if($halqa->teacher)
+                                    <span class="badge bg-success-lt ms-2">
+                                        <i class="la la-chalkboard-teacher"></i>
+                                        {{ $halqa->teacher->name }}
+                                    </span>
+                                @endif
+                                <span class="badge bg-white text-primary border border-primary rounded-pill fs-6 px-3 ms-2">{{ $students->count() }}
                                     طالب</span>
                             </h3>
                         </div>
