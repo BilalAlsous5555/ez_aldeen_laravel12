@@ -66,7 +66,7 @@ return [
          * The available color modes.
          */
         'colorModes' => [
-            'system' => 'la-desktop',
+            
             'light' => 'la-sun',
             'dark' => 'la-moon',
         ],

@@ -76,7 +76,7 @@ return [
     'developer_name' => ' Bilal_Alsous ',
 
     // Developer website. Link in footer. Type false if you want to hide it.
-    'developer_link' => false,
+    'developer_link' => true,
 
     // Show powered by Laravel Backpack in the footer? true/false
     'show_powered_by' => false,

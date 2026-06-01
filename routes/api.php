@@ -1,8 +1,8 @@
 <?php
 
 use App\Http\Controllers\UserController\ApiAttendanceController;
+use App\Http\Controllers\UserController\ApiQuranProgressController;
 use App\Http\Controllers\UserController\ApiTeacherDashboardController;
-use App\Http\Controllers\UserController\ApiUserController;
 use App\Http\Controllers\Users\Api\Auth\AuthController;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Route;
@@ -19,14 +19,14 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
     return $request->user();
 });
 
-// auth routes
 Route::delete('/logout', [AuthController::class, 'logout'])->middleware('auth:sanctum');
 Route::post('/login', [AuthController::class, 'login']);
 
-// teacher routes
-Route::middleware('auth:sanctum')->get('/teacher/dashboard', [ApiTeacherDashboardController::class, 'dashboard']);
-Route::middleware('auth:sanctum')->get('/teacher/attendance/create', [ApiAttendanceController::class, 'create']);
-Route::middleware('auth:sanctum')->post('/teacher/attendance', [ApiAttendanceController::class, 'store']);
-
-// api routes
-// Route::get('/getuserdata' , [ApiUserController::class ,'index']);
+Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/teacher/dashboard', [ApiTeacherDashboardController::class, 'dashboard']);
+    Route::get('/teacher/attendance/create', [ApiAttendanceController::class, 'create']);
+    Route::post('/teacher/attendance', [ApiAttendanceController::class, 'store']);
+    Route::get('/teacher/quran-progress/create', [ApiQuranProgressController::class, 'create']);
+    Route::post('/teacher/quran-progress', [ApiQuranProgressController::class, 'store']);
+    Route::get('/teacher/quran-progress/history', [ApiQuranProgressController::class, 'history']);
+});

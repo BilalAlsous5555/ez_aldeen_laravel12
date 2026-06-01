@@ -16,137 +16,6 @@
 </style>
 @endsection
 
-@php
-    use App\Models\User;
-    use App\Models\Halakat;
-    use App\Models\Studentachievement;
-    use App\Models\Attendance;
-
-    $activeStudentsCount = User::where('role', 'student')->whereNull('deleted_at')->count();
-
-    $activeTeachersCount = User::where('role', 'teacher')->whereNull('deleted_at')->whereHas('halqa')->count();
-
-    $activeHalakatCount = Halakat::whereNull('deleted_at')->count();
-
-    $withoutHalqaCount = User::where('role', 'student')
-        ->whereNull('deleted_at')
-        ->where(function ($q) {
-            $q->whereDoesntHave('activeEnrollment')->orWhereHas(
-                'activeEnrollment.halqa',
-                fn($hq) => $hq->onlyTrashed(),
-            );
-        })
-        ->count();
-
-    $todayAttendanceCount = Attendance::whereDate('attendance_date', today())
-        ->whereHas('student', fn($q) => $q->whereNull('deleted_at'))
-        ->count();
-
-    $todayAbsentCount = Attendance::whereDate('attendance_date', today())
-        ->where('status', 'غائب')
-        ->whereHas('student', fn($q) => $q->whereNull('deleted_at'))
-        ->count();
-
-    $totalSurahsCount = Studentachievement::where('type', 'surah_memorized')->count();
-
-    $totalJuzCount = Studentachievement::where('type', 'juz_memorized')->count();
-
-    $halakat = Halakat::whereNull('deleted_at')
-        ->with(['teacher', 'activeStudents'])
-        ->get();
-
-    $allStudentIds = $halakat->flatMap(fn($h) => $h->activeStudents->pluck('id'))->unique();
-
-    $thisMonthStart = now()->startOfMonth();
-
-    $attendanceData = collect();
-    if ($allStudentIds->isNotEmpty()) {
-        $attendanceData = Attendance::whereIn('student_id', $allStudentIds)
-            ->where('attendance_date', '>=', $thisMonthStart)
-            ->select('student_id', 'halakat_id', 'status', 'excused_reason', 'attendance_date')
-            ->get()
-            ->groupBy(fn($a) => $a->student_id . '_' . $a->halakat_id);
-    }
-
-    $allStudents = $halakat->flatMap(fn($h) => $h->activeStudents)->keyBy('id');
-
-    $allAttendanceByStudent = collect();
-    if ($allStudentIds->isNotEmpty()) {
-        $allAttendanceByStudent = Attendance::whereIn('student_id', $allStudentIds)
-            ->select('student_id', 'status')
-            ->get()
-            ->groupBy('student_id');
-    }
-
-    $committedStudents = collect();
-    foreach ($allStudents as $student) {
-        $records = $allAttendanceByStudent->get($student->id, collect());
-        $present = $records->where('status', 'حاضر')->count();
-        $absent = $records->where('status', 'غائب')->count();
-        $total = $records->count();
-        $pct = $total > 0 ? round(($present / $total) * 100) : 0;
-        $committedStudents->push(
-            (object) [
-                'student' => $student,
-                'present' => $present,
-                'absent' => $absent,
-                'percentage' => $pct,
-            ],
-        );
-    }
-
-    $committedStudents = $committedStudents->sortByDesc('percentage')->values();
-
-    $ageGroups = ['under8' => 0, 'bet8_12' => 0, 'bet12_18' => 0, 'over18' => 0];
-    $now = now();
-    foreach ($allStudents as $student) {
-        $age = $student->birth_date ? \Carbon\Carbon::parse($student->birth_date)->diffInYears($now) : null;
-        if ($age === null) {
-            continue;
-        }
-        if ($age < 8) {
-            $ageGroups['under8']++;
-        } elseif ($age <= 12) {
-            $ageGroups['bet8_12']++;
-        } elseif ($age <= 18) {
-            $ageGroups['bet12_18']++;
-        } else {
-            $ageGroups['over18']++;
-        }
-    }
-
-    $recentSurahs = Studentachievement::where('type', 'surah_memorized')
-        ->whereHas('student', fn($q) => $q->whereNull('deleted_at'))
-        ->whereIn('id', function ($q) {
-            $q->select(\DB::raw('MAX(id)'))
-                ->from('student_achievements')
-                ->where('type', 'surah_memorized')
-                ->groupBy('student_id');
-        })
-        ->with(['student', 'surah', 'teacher'])
-        ->orderBy('achieved_at', 'desc')
-        ->get();
-
-    $recentJuz = Studentachievement::where('type', 'juz_memorized')
-        ->whereHas('student', fn($q) => $q->whereNull('deleted_at'))
-        ->whereIn('id', function ($q) {
-            $q->select(\DB::raw('MAX(id)'))
-                ->from('student_achievements')
-                ->where('type', 'juz_memorized')
-                ->groupBy('student_id');
-        })
-        ->with(['student', 'teacher'])
-        ->orderBy('achieved_at', 'desc')
-        ->get();
-
-    $juzProgress = Studentachievement::where('type', 'juz_memorized')
-        ->whereHas('student', fn($q) => $q->whereNull('deleted_at'))
-        ->with('student')
-        ->get()
-        ->groupBy('juz_number')
-        ->sortKeys();
-@endphp
-
 @section('content')
     <div class="row">
         <div class="col-sm-6 col-lg-3">
@@ -326,9 +195,11 @@
                                             );
                                             $monthlyPresent = $sa->where('status', 'حاضر')->count();
                                             $monthlyAbsent = $sa->where('status', 'غائب')->count();
-                                            $monthlyTotal = $sa->count();
-                                            $monthlyPct =
-                                                $monthlyTotal > 0 ? round(($monthlyPresent / $monthlyTotal) * 100) : 0;
+
+                                            $halqaRecs = $halqaAttendanceData->get($key, collect());
+                                            $halqaPresent = $halqaRecs->where('status', 'حاضر')->count();
+                                            $halqaTotal = $halqaRecs->count();
+                                            $halqaPct = $halqaTotal > 0 ? round(($halqaPresent / $halqaTotal) * 100) : 0;
                                         @endphp
                                         <tr>
                                             <td><a
@@ -340,7 +211,7 @@
                                             </td>
                                             <td>{{ $monthlyPresent }}</td>
                                             <td>{{ $monthlyAbsent }}</td>
-                                            <td>{{ $monthlyPct }}%</td>
+                                            <td>{{ $halqaPct }}%</td>
                                         </tr>
                                     @empty
                                         <tr>
@@ -401,51 +272,7 @@
         </div>
     </div>
 
-    <div class="row">
-        <div class="col-md-12">
-            <div class="card mb-3">
-                <div class="card-header">
-                    <h3 class="card-title"><i class="la la-trophy"></i> أكثر الطلاب التزاما في المعهد</h3>
-                </div>
-                <div class="table-responsive">
-                    <table class="table table-vcenter card-table">
-                        <thead>
-                            <tr>
-                                <th>اسم الطالب</th>
-                                <th>عدد مرات الحضور الكلي</th>
-                                <th>عدد مرات الغياب الكلي</th>
-                                <th>النسبة المئوية الكلية</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            @forelse($committedStudents as $cs)
-                                <tr>
-                                    <td><a
-                                            href="{{ backpack_url('user/' . $cs->student->id . '/show') }}">{{ $cs->student->name }}</a>
-                                    </td>
-                                    <td>{{ $cs->present }}</td>
-                                    <td>{{ $cs->absent }}</td>
-                                    <td>
-                                        <div class="d-flex align-items-center">
-                                            <div class="progress progress-xs flex-grow-1">
-                                                <div class="progress-bar {{ $cs->percentage >= 80 ? 'bg-success' : ($cs->percentage >= 60 ? 'bg-primary' : ($cs->percentage >= 40 ? 'bg-warning' : 'bg-danger')) }}"
-                                                    style="width: {{ $cs->percentage }}%"></div>
-                                            </div>
-                                            <span class="ms-2">{{ $cs->percentage }}%</span>
-                                        </div>
-                                    </td>
-                                </tr>
-                            @empty
-                                <tr>
-                                    <td colspan="4" class="text-muted text-center">لا توجد بيانات بعد</td>
-                                </tr>
-                            @endforelse
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </div>
-    </div>
+
 
     <div class="row">
         <div class="col-md-6">
@@ -514,4 +341,51 @@
                 </table>
             </div>
         </div>
-</div>@endsection
+</div>
+
+    <div class="row">
+        <div class="col-md-12">
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h3 class="card-title"><i class="la la-trophy"></i> أكثر الطلاب التزاما في المعهد</h3>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-vcenter card-table">
+                        <thead>
+                            <tr>
+                                <th>اسم الطالب</th>
+                                <th>عدد مرات الحضور الكلي</th>
+                                <th>عدد مرات الغياب الكلي</th>
+                                <th>النسبة المئوية الكلية</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @forelse($committedStudents as $cs)
+                                <tr>
+                                    <td><a
+                                            href="{{ backpack_url('user/' . $cs->student->id . '/show') }}">{{ $cs->student->name }}</a>
+                                    </td>
+                                    <td>{{ $cs->present }}</td>
+                                    <td>{{ $cs->absent }}</td>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <div class="progress progress-xs flex-grow-1">
+                                                <div class="progress-bar {{ $cs->percentage >= 80 ? 'bg-success' : ($cs->percentage >= 60 ? 'bg-primary' : ($cs->percentage >= 40 ? 'bg-warning' : 'bg-danger')) }}"
+                                                    style="width: {{ $cs->percentage }}%"></div>
+                                            </div>
+                                            <span class="ms-2">{{ $cs->percentage }}%</span>
+                                        </div>
+                                    </td>
+                                </tr>
+                            @empty
+                                <tr>
+                                    <td colspan="4" class="text-muted text-center">لا توجد بيانات بعد</td>
+                                </tr>
+                            @endforelse
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+@endsection

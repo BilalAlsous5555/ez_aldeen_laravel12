@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Admin\AccountCrudController;
+use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\UserCrudController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +19,7 @@ Route::group([
     ),
     'namespace' => 'App\Http\Controllers\Admin',
 ], function () { // custom admin routes
+    Route::get('dashboard', [DashboardController::class, 'dashboard'])->name('backpack.dashboard');
     Route::crud('user', UserCrudController::class);
     Route::crud('accounts', AccountCrudController::class);
     Route::crud('halakat', 'HalakatCrudController');
