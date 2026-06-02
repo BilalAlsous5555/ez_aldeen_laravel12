@@ -95,15 +95,23 @@ class ApiQuranProgressController extends Controller
             'student_id' => 'required|exists:users,id',
             'surah_id' => 'nullable|exists:surah,id',
             'quran_page_number' => 'nullable|integer|min:1|max:604',
-            'from_aya' => 'nullable|integer|min:1',
-            'to_aya' => 'nullable|integer|min:1',
+            'from_aya' => 'nullable|integer',
+            'to_aya' => 'nullable|integer',
             'juz_number' => 'nullable|array',
             'juz_number.*' => 'integer|min:1|max:30',
             'evaluation' => 'required|in:ممتاز,جيد جدا,جيد,اعادة',
             'memorize_type' => 'required|in:حفظ,مراجعة',
             'notes' => 'nullable|string|max:500',
-            'date' => 'required|date',
+            'date' => 'nullable|date',
         ]);
+
+        $validated['from_aya'] = ! empty($validated['from_aya']) ? (int) $validated['from_aya'] : null;
+        $validated['to_aya'] = ! empty($validated['to_aya']) ? (int) $validated['to_aya'] : null;
+        $validated['quran_page_number'] = ! empty($validated['quran_page_number']) ? (int) $validated['quran_page_number'] : null;
+
+        if (empty($validated['date'])) {
+            $validated['date'] = now()->toDateString();
+        }
 
         $halakaStudentIds = $halqa->activeStudents()->pluck('users.id')->toArray();
 
@@ -111,21 +119,19 @@ class ApiQuranProgressController extends Controller
             return response()->json(['message' => 'هذا الطالب ليس في حلقتك'], 422);
         }
 
-        if (empty($validated['surah_id']) && empty($validated['juz_number'])) {
-            return response()->json(['message' => 'يجب تحديد السورة أو الجزء'], 422);
-        }
-
         if (! empty($validated['surah_id'])) {
             $surah = Surah::find($validated['surah_id']);
-            if ($surah && ! empty($validated['from_aya']) && $validated['from_aya'] > $surah->aya_count) {
+            $fromAya = $validated['from_aya'] ?? null;
+            $toAya = $validated['to_aya'] ?? null;
+            if ($surah && $fromAya && $fromAya > $surah->aya_count) {
                 return response()->json([
-                    'message' => 'from_aya يتجاوز عدد آيات السورة ('.$surah->aya_count.')',
+                    'message' => 'ادخل الرقم الصحيح للآيات',
                     'max_aya' => $surah->aya_count,
                 ], 422);
             }
-            if ($surah && ! empty($validated['to_aya']) && $validated['to_aya'] > $surah->aya_count) {
+            if ($surah && $toAya && $toAya > $surah->aya_count) {
                 return response()->json([
-                    'message' => 'to_aya يتجاوز عدد آيات السورة ('.$surah->aya_count.')',
+                    'message' => 'لا يمكن تجاوز عدد آيات السورة ('.$surah->name.')',
                     'max_aya' => $surah->aya_count,
                 ], 422);
             }
@@ -135,11 +141,11 @@ class ApiQuranProgressController extends Controller
             'student_id' => $validated['student_id'],
             'halakat_id' => $halqa->id,
             'teacher_id' => $teacher->id,
-            'surah_id' => $validated['surah_id'] ?? null,
-            'quran_page_number' => $validated['quran_page_number'] ?? null,
-            'from_aya' => $validated['from_aya'] ?? null,
-            'to_aya' => $validated['to_aya'] ?? null,
-            'juz_number' => $validated['juz_number'] ?? null,
+            'surah_id' => ! empty($validated['surah_id']) ? $validated['surah_id'] : null,
+            'quran_page_number' => ! empty($validated['quran_page_number']) ? $validated['quran_page_number'] : null,
+            'from_aya' => ! empty($validated['from_aya']) ? $validated['from_aya'] : null,
+            'to_aya' => ! empty($validated['to_aya']) ? $validated['to_aya'] : null,
+            'juz_number' => ! empty($validated['juz_number']) ? $validated['juz_number'] : null,
             'evaluation' => $validated['evaluation'],
             'memorize_type' => $validated['memorize_type'],
             'notes' => $validated['notes'] ?? null,

@@ -193,11 +193,10 @@
                                             $todayRecord = $sa->first(
                                                 fn($r) => $r->attendance_date->isSameDay(today()),
                                             );
-                                            $monthlyPresent = $sa->where('status', 'حاضر')->count();
-                                            $monthlyAbsent = $sa->where('status', 'غائب')->count();
 
                                             $halqaRecs = $halqaAttendanceData->get($key, collect());
                                             $halqaPresent = $halqaRecs->where('status', 'حاضر')->count();
+                                            $halqaAbsent = $halqaRecs->where('status', 'غائب')->count();
                                             $halqaTotal = $halqaRecs->count();
                                             $halqaPct = $halqaTotal > 0 ? round(($halqaPresent / $halqaTotal) * 100) : 0;
                                         @endphp
@@ -209,8 +208,8 @@
                                             </td>
                                             <td>{{ $todayRecord && $todayRecord->status === 'غائب' && $todayRecord->excused_reason ? $todayRecord->excused_reason : '—' }}
                                             </td>
-                                            <td>{{ $monthlyPresent }}</td>
-                                            <td>{{ $monthlyAbsent }}</td>
+                                            <td>{{ $halqaPresent }}</td>
+                                            <td>{{ $halqaAbsent }}</td>
                                             <td>{{ $halqaPct }}%</td>
                                         </tr>
                                     @empty

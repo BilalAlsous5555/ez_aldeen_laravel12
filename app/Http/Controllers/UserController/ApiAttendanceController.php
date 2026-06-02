@@ -103,7 +103,7 @@ class ApiAttendanceController extends Controller
         }
 
         return response()->json([
-            'message' => count($created) > 0 ? 'تم تسجيل الحضور بنجاح' : 'لم يتم تسجيل أي حضور',
+            'message' => count($created) > 0 ? '   تم تسجيل الحضور بنجاح' : '   لا يمكن تسجيل الحضور اكثر من مره لنفس اليوم ',
             'attendance_count' => count($created),
             'errors' => $errors,
         ], count($created) > 0 ? 201 : 422);
