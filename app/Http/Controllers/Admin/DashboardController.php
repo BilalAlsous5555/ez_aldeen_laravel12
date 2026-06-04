@@ -28,7 +28,7 @@ class DashboardController extends Controller
 
     private function getDashboardData(): array
     {
-        return Cache::remember('dashboard.stats', now()->addMinutes(5), function () {
+        return Cache::remember('dashboard.stats', now()->addMinutes(1), function () {
             $now = now();
             $thisMonthStart = $now->copy()->startOfMonth();
 
@@ -46,6 +46,7 @@ class DashboardController extends Controller
             $withoutHalqaCount = $this->getWithoutHalqaCount();
 
             $todayAttendanceCount = Attendance::whereDate('attendance_date', $now->toDateString())
+                ->where('status', 'حاضر')
                 ->whereHas('student', fn ($q) => $q->whereNull('deleted_at'))
                 ->count();
 
@@ -62,6 +63,20 @@ class DashboardController extends Controller
                 ->get();
 
             $allStudentIds = $halakat->flatMap(fn ($h) => $h->activeStudents->pluck('id'))->unique();
+
+            $todayPresentByHalaka = Attendance::whereDate('attendance_date', $now->toDateString())
+                ->where('status', 'حاضر')
+                ->whereIn('halakat_id', $halakat->pluck('id'))
+                ->selectRaw('halakat_id, count(*) as count')
+                ->groupBy('halakat_id')
+                ->pluck('count', 'halakat_id');
+
+            $todayAbsentByHalaka = Attendance::whereDate('attendance_date', $now->toDateString())
+                ->where('status', 'غائب')
+                ->whereIn('halakat_id', $halakat->pluck('id'))
+                ->selectRaw('halakat_id, count(*) as count')
+                ->groupBy('halakat_id')
+                ->pluck('count', 'halakat_id');
 
             $attendanceData = collect();
             if ($allStudentIds->isNotEmpty()) {
@@ -164,6 +179,8 @@ class DashboardController extends Controller
                 'totalSurahsCount',
                 'totalJuzCount',
                 'halakat',
+                'todayPresentByHalaka',
+                'todayAbsentByHalaka',
                 'attendanceData',
                 'halqaAttendanceData',
                 'allStudents',

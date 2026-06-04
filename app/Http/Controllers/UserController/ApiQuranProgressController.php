@@ -51,7 +51,7 @@ class ApiQuranProgressController extends Controller
 
         $juzList = collect(range(1, 30))->map(fn ($i) => [
             'value' => $i,
-            'label' => 'الجزء '.$i,
+            'label' => $i,
         ]);
 
         $evaluations = [
@@ -98,7 +98,7 @@ class ApiQuranProgressController extends Controller
             'from_aya' => 'nullable|integer',
             'to_aya' => 'nullable|integer',
             'juz_number' => 'nullable|array',
-            'juz_number.*' => 'integer|min:1|max:30',
+            'juz_number.*' => 'nullable',
             'evaluation' => 'required|in:ممتاز,جيد جدا,جيد,اعادة',
             'memorize_type' => 'required|in:حفظ,مراجعة',
             'notes' => 'nullable|string|max:500',
@@ -108,6 +108,10 @@ class ApiQuranProgressController extends Controller
         $validated['from_aya'] = ! empty($validated['from_aya']) ? (int) $validated['from_aya'] : null;
         $validated['to_aya'] = ! empty($validated['to_aya']) ? (int) $validated['to_aya'] : null;
         $validated['quran_page_number'] = ! empty($validated['quran_page_number']) ? (int) $validated['quran_page_number'] : null;
+        $validated['surah_id'] = ! empty($validated['surah_id']) ? (int) $validated['surah_id'] : null;
+        if (! empty($validated['juz_number'])) {
+            $validated['juz_number'] = array_map('intval', $validated['juz_number']);
+        }
 
         if (empty($validated['date'])) {
             $validated['date'] = now()->toDateString();
@@ -151,6 +155,8 @@ class ApiQuranProgressController extends Controller
             'notes' => $validated['notes'] ?? null,
             'date' => $validated['date'],
         ]);
+
+        \Illuminate\Support\Facades\Cache::forget('dashboard.stats');
 
         $progress->load(['student', 'surah']);
 

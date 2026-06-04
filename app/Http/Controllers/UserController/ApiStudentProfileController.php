@@ -30,13 +30,6 @@ class ApiStudentProfileController extends Controller
         $currentHalqa = $currentEnrollment?->halqa;
         $currentHalqaId = $currentHalqa?->id;
 
-        $lastProgress = $student->progress()
-            ->with('surah')
-            ->where('memorize_type', 'حفظ')
-            ->whereNotNull('surah_id')
-            ->latest('id')
-            ->first();
-
         $currentSurahs = collect();
         $currentJuz = collect();
         $revisionSurahs = collect();
@@ -100,6 +93,36 @@ class ApiStudentProfileController extends Controller
                 ]);
         }
 
+        $last4Progress = $student->progress()
+            ->with(['surah', 'teacher'])
+            ->orderByDesc('date')
+            ->orderByDesc('id')
+            ->limit(4)
+            ->get()
+            ->map(fn ($p) => [
+                'id' => $p->id,
+                'surah_name' => $p->surah?->name,
+                'juz_number' => $p->juz_number,
+                'from_aya' => $p->from_aya,
+                'to_aya' => $p->to_aya,
+                'evaluation' => $p->evaluation,
+                'memorize_type' => $p->memorize_type,
+                'notes' => $p->notes,
+                'teacher_name' => $p->teacher?->name,
+                'date' => $p->date?->format('Y-m-d'),
+            ]);
+
+        $last4Attendance = $student->attendances()
+            ->orderByDesc('attendance_date')
+            ->limit(4)
+            ->get()
+            ->map(fn ($a) => [
+                'id' => $a->id,
+                'date' => $a->attendance_date?->format('Y-m-d'),
+                'status' => $a->status,
+                'excused_reason' => $a->excused_reason,
+            ]);
+
         $totalAtt = $student->attendances()->count();
         $presentAtt = $student->attendances()->where('status', 'حاضر')->count();
         $attPct = $totalAtt > 0 ? round(($presentAtt / $totalAtt) * 100) : 0;
@@ -152,43 +175,18 @@ class ApiStudentProfileController extends Controller
             'student' => [
                 'id' => $student->id,
                 'name' => $student->name,
-                'email' => $student->email,
-                'phone' => $student->phone,
-                'birth_date' => $student->birth_date?->format('Y-m-d'),
-                'role' => $student->arabic_role ?? $student->role,
+                // 'email' => $student->email,
+                // 'phone' => $student->phone,
+                // 'birth_date' => $student->birth_date?->format('Y-m-d'),
+                // 'role' => $student->arabic_role ?? $student->role,
                 'created_at' => $student->created_at?->format('Y-m-d'),
             ],
-            'current_halaka' => $currentHalqa ? [
-                'id' => $currentHalqa->id,
-                'name' => $currentHalqa->name,
-                'teacher_name' => $currentHalqa->teacher?->name,
-            ] : null,
-            'last_progress' => $lastProgress ? [
-                'surah_name' => $lastProgress->surah?->name,
-                'from_aya' => $lastProgress->from_aya,
-                'to_aya' => $lastProgress->to_aya,
-                'evaluation' => $lastProgress->evaluation,
-                'memorize_type' => $lastProgress->memorize_type,
-                'date' => $lastProgress->date?->format('Y-m-d'),
-            ] : null,
             'memorized_surahs' => $currentSurahs,
             'memorized_juz' => $currentJuz,
             'revision_surahs' => $revisionSurahs,
             'revision_juz' => $revisionJuzProgress,
-            'attendance' => [
-                'overall' => [
-                    'total' => $totalAtt,
-                    'present' => $presentAtt,
-                    'absent' => $totalAtt - $presentAtt,
-                    'percentage' => $attPct,
-                ],
-                'halaka' => $currentHalqaId ? [
-                    'total' => $halqaAttTotal,
-                    'present' => $halqaAttPresent,
-                    'absent' => $halqaAttTotal - $halqaAttPresent,
-                    'percentage' => $halqaAttPct,
-                ] : null,
-            ],
+            'last_progress' => $last4Progress,
+            'last_attendance' => $last4Attendance,
             'previous_enrollments' => $oldEnrollments,
         ]);
     }

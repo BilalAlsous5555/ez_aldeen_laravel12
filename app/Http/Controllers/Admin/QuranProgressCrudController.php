@@ -60,6 +60,8 @@ class QuranProgressCrudController extends CrudController
             $query->orWhereHas('surah', function ($q) use ($searchTerm) {
                 $q->where('name', 'like', '%'.$searchTerm.'%');
             });
+        })->format(function ($value, $entry) {
+            return $entry->surah ? $entry->surah->name : '—';
         });
 
         CRUD::column('page')->wrapper([
@@ -68,28 +70,29 @@ class QuranProgressCrudController extends CrudController
             },
         ])->label('رقم الصفحة')->searchLogic(function ($query, $column, $searchTerm) {
             $query->orWhere('quran_page_number', 'like', '%'.$searchTerm.'%');
+        })->format(function ($value) {
+            return $value ? $value : '—';
         });
 
         CRUD::column('from_aya')->label('من الايه')->searchLogic(function ($query, $column, $searchTerm) {
             $query->orWhere('from_aya', 'like', '%'.$searchTerm.'%');
+        })->format(function ($value) {
+            return $value ? $value : '—';
         });
         CRUD::column('to_aya')->label('الى الايه')->searchLogic(function ($query, $column, $searchTerm) {
             $query->orWhere('to_aya', 'like', '%'.$searchTerm.'%');
+        })->format(function ($value) {
+            return $value ? $value : '—';
         });
         CRUD::column('evaluation')->label('تقييم الحفظ او المراجعة')->searchLogic(function ($query, $column, $searchTerm) {
             $query->orWhere('evaluation', 'like', '%'.$searchTerm.'%');
         });
         CRUD::column('memorize_type')->label('نوع الحفظ');
-        CRUD::column('juz_number')->label('رقم الجزء')->format(function ($value) {
-            if (is_null($value)) {
-                return '—';
-            }
-            $arr = is_array($value) ? $value : json_decode($value, true);
-
-            return is_array($arr) ? implode(', ', $arr) : $value;
-        });
+        CRUD::column('juz_number')->label('رقم الجزء')->type('view')->view('vendor.backpack.crud.columns.juz_number_formatted');
         CRUD::column('notes')->label('ملاحظات المدرسين')->searchLogic(function ($query, $column, $searchTerm) {
             $query->orWhere('notes', 'like', '%'.$searchTerm.'%');
+        })->format(function ($value) {
+            return $value ? $value : '—';
         });
         CRUD::column('date')->type('date')->label('التاريخ');
     }

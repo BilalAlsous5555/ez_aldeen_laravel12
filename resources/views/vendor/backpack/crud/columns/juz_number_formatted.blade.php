@@ -1,0 +1,1 @@
+<td>{{ $entry->juz_number_formatted }}</td>

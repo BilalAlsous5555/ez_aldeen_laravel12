@@ -99,6 +99,8 @@ class ApiAttendanceController extends Controller
                 'excused_reason' => $status === 'غائب' ? $excusedReason : null,
             ]);
 
+            \Illuminate\Support\Facades\Cache::forget('dashboard.stats');
+
             $created[] = $attendance;
         }
 

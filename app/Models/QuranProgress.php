@@ -131,4 +131,25 @@ class QuranProgress extends Model
     {
         return $this->memorize_type === 'مراجعة';
     }
+
+    public function getJuzNumberFormattedAttribute(): string
+    {
+        $val = $this->juz_number;
+
+        if (is_null($val) || $val === '' || $val === '[]') {
+            return '—';
+        }
+
+        if (is_string($val)) {
+            $arr = json_decode($val, true);
+        } else {
+            $arr = $val;
+        }
+
+        if (is_array($arr) && count($arr) > 0) {
+            return implode('، ', array_map(fn ($n) => 'الجزء '.((int) $n), $arr));
+        }
+
+        return '—';
+    }
 }

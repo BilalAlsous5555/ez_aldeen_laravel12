@@ -156,7 +156,7 @@
     @if ($halakat->isNotEmpty())
         <div class="row">
             @foreach ($halakat as $halqa)
-                @php $students = $halqa->activeStudents; @endphp
+                @php $students = $halqa->activeStudents; $halqaPresent = $todayPresentByHalaka[$halqa->id] ?? 0; $halqaAbsent = $todayAbsentByHalaka[$halqa->id] ?? 0; @endphp
                 <div class="col-md-12 mb-3">
                     <div class="card mb-0">
                         <div class="card-header">
@@ -171,6 +171,8 @@
                                 @endif
                                 <span class="badge bg-white text-primary border border-primary rounded-pill fs-6 px-3 ms-2">{{ $students->count() }}
                                     طالب</span>
+                                <span class="badge bg-success-lt rounded-pill fs-6 px-3 ms-2"><i class="la la-check-circle"></i> {{ $halqaPresent }} حاضر</span>
+                                <span class="badge bg-success-lt rounded-pill fs-6 px-3 ms-2"><i class="la la-times-circle"></i> {{ $halqaAbsent }} غائب</span>
                             </h3>
                         </div>
                         <div class="table-responsive">

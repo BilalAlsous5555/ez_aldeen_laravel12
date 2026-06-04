@@ -6,7 +6,7 @@
     $currentHalqa = $currentEnrollment?->halqa;
     $currentHalqaId = $currentHalqa?->id;
 
-    $lastProgress = $student->progress()->with('surah')->where('memorize_type', 'حفظ')->latest('id')->first();
+    $lastProgress = $student->progress()->with('surah')->where('memorize_type', 'حفظ')->whereNotNull('surah_id')->latest('id')->first();
 
 $currentSurahs = collect();
     $currentJuz = collect();
