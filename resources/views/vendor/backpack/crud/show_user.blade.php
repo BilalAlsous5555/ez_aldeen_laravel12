@@ -17,10 +17,16 @@ $currentSurahs = collect();
             ->with('surah')
             ->get();
 
-        $currentJuz = Studentachievement::where('student_id', $student->id)
-            ->where('type', 'juz_memorized')
-            ->where('halakat_id', $currentHalqaId)
-            ->get();
+        $currentJuz = collect();
+        if ($currentHalqaId) {
+            $currentJuz = $student->progress()
+                ->where('memorize_type', 'حفظ')
+                ->whereNotNull('juz_number')
+                ->whereNull('surah_id')
+                ->where('halakat_id', $currentHalqaId)
+                ->orderBy('date', 'desc')
+                ->get();
+        }
 
         $revisionSurahs = $student->progress()
             ->where('memorize_type', 'مراجعة')
@@ -31,13 +37,14 @@ $currentSurahs = collect();
             ->get()
             ->unique('surah_id');
 
-        $revisionJuzProgress = $student->progress()
-            ->where('memorize_type', 'مراجعة')
-            ->whereNotNull('juz_number')
-            ->where('halakat_id', $currentHalqaId)
-            ->with('surah')
-            ->orderBy('date', 'desc')
-            ->get();
+$revisionJuzProgress = $student->progress()
+             ->where('memorize_type', 'مراجعة')
+             ->whereNotNull('juz_number')
+             ->whereNull('surah_id')
+             ->where('halakat_id', $currentHalqaId)
+             ->with('surah')
+             ->orderBy('date', 'desc')
+             ->get();
     }
 
     $totalAtt = $student->attendances()->count();
@@ -230,12 +237,19 @@ $currentSurahs = collect();
                         @if ($currentJuz->isNotEmpty())
                             <div class="table-responsive">
                                 <table class="table table-vcenter table-sm">
-                                    <thead><tr><th>الجزء</th><th>تاريخ الإنجاز</th></tr></thead>
+                                    <thead><tr><th>الجزء</th><th>التقييم</th><th>ملاحظات المدرس</th><th>التاريخ</th></tr></thead>
                                     <tbody>
-                                        @foreach ($currentJuz as $ach)
+                                        @foreach ($currentJuz as $progress)
                                             <tr>
-                                                <td>الجزء {{ $ach->juz_number }}</td>
-                                                <td>{{ $ach->achieved_at?->format('Y-m-d') ?? '—' }}</td>
+                                                <td>
+                                                    @php
+                                                        $juzArr = is_array($progress->juz_number) ? $progress->juz_number : json_decode($progress->juz_number, true);
+                                                        echo is_array($juzArr) ? implode('، ', array_map(fn($n) => 'الجزء ' . ((int) $n), $juzArr)) : '—';
+                                                    @endphp
+                                                </td>
+                                                <td>{{ $progress->evaluation ?? '—' }}</td>
+                                                <td>{{ $progress->notes ?? '—' }}</td>
+                                                <td>{{ $progress->date?->format('Y-m-d') ?? '—' }}</td>
                                             </tr>
                                         @endforeach
                                     </tbody>

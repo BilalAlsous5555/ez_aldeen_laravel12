@@ -48,16 +48,24 @@ class ApiStudentProfileController extends Controller
                     'teacher_name' => $a->teacher?->name,
                 ]);
 
-            $currentJuz = Studentachievement::where('student_id', $student->id)
-                ->where('type', 'juz_memorized')
-                ->where('halakat_id', $currentHalqaId)
-                ->get()
-                ->map(fn ($a) => [
-                    'id' => $a->id,
-                    'juz_number' => $a->juz_number,
-                    'achieved_at' => $a->achieved_at?->format('Y-m-d'),
-                    'teacher_name' => $a->teacher?->name,
-                ]);
+            $currentJuz = collect();
+            if ($currentHalqaId) {
+                $currentJuz = $student->progress()
+                    ->where('memorize_type', 'حفظ')
+                    ->whereNotNull('juz_number')
+                    ->whereNull('surah_id')
+                    ->where('halakat_id', $currentHalqaId)
+                    ->orderBy('date', 'desc')
+                    ->get()
+                    ->map(fn ($p) => [
+                        'id' => $p->id,
+                        'juz_number' => $p->juz_number,
+                        'evaluation' => $p->evaluation,
+                        'notes' => $p->notes,
+                        'teacher_name' => $p->teacher?->name,
+                        'date' => $p->date?->format('Y-m-d'),
+                    ]);
+            }
 
             $revisionSurahs = $student->progress()
                 ->where('memorize_type', 'مراجعة')
@@ -80,6 +88,7 @@ class ApiStudentProfileController extends Controller
             $revisionJuzProgress = $student->progress()
                 ->where('memorize_type', 'مراجعة')
                 ->whereNotNull('juz_number')
+                ->whereNull('surah_id')
                 ->where('halakat_id', $currentHalqaId)
                 ->with('surah')
                 ->orderBy('date', 'desc')
@@ -181,6 +190,11 @@ class ApiStudentProfileController extends Controller
                 // 'role' => $student->arabic_role ?? $student->role,
                 'created_at' => $student->created_at?->format('Y-m-d'),
             ],
+            'current_halaka' => $currentHalqa ? [
+                'id' => $currentHalqa->id,
+                'name' => $currentHalqa->name,
+                'teacher_name' => $currentHalqa->teacher?->name,
+            ] : null,
             'memorized_surahs' => $currentSurahs,
             'memorized_juz' => $currentJuz,
             'revision_surahs' => $revisionSurahs,
