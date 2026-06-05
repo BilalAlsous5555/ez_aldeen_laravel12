@@ -14,6 +14,9 @@ RUN apt-get update && apt-get install -y \
     libjpeg62-turbo-dev \
     && docker-php-ext-install pdo_mysql mbstring exif pcntl bcmath gd zip
 
+# Set PHP timezone
+RUN echo "date.timezone = Asia/Damascus" > /usr/local/etc/php/conf.d/timezone.ini
+
 # Install Composer
 COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 
