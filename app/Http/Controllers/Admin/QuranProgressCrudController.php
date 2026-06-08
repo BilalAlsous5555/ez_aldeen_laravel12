@@ -28,7 +28,7 @@ class QuranProgressCrudController extends CrudController
     {
         CRUD::setModel(\App\Models\QuranProgress::class);
         CRUD::setRoute(config('backpack.base.route_prefix').'/quran-progress');
-        CRUD::setEntityNameStrings('quran progress', 'quran progresses');
+        CRUD::setEntityNameStrings('quran progress', ' التقدم القرآني');
     }
 
     /**

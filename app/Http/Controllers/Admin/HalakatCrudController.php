@@ -29,7 +29,7 @@ class HalakatCrudController extends CrudController
     {
         CRUD::setModel(\App\Models\Halakat::class);
         CRUD::setRoute(config('backpack.base.route_prefix').'/halakat');
-        CRUD::setEntityNameStrings('halakat', 'halakats');
+        CRUD::setEntityNameStrings('halakat', 'الحلقات');
     }
 
     /**

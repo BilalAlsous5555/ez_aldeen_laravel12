@@ -88,12 +88,37 @@ class HalakatStudent extends Model
             'is_active' => true,
         ]);
 
-        // 3. حذف سجلات المراجعة القديمة (لا تهم المدرس الجديد)
+        // 3. حفظ آخر تقدم حفظ مع سورة (ليعرف المدرس الجديد أين وصل الطالب)
+        // ثم حذف جميع سجلات التقدم في الحلقة القديمة
+        // ثم إعادة إنشاء آخر سجل حفظ في الحلقة الجديدة
         if ($oldHalakatId) {
+            $lastProgress = \App\Models\QuranProgress::where('student_id', $studentId)
+                ->where('halakat_id', $oldHalakatId)
+                ->where('memorize_type', 'حفظ')
+                ->whereNotNull('surah_id')
+                ->orderByDesc('id')
+                ->first();
+
             \App\Models\QuranProgress::where('student_id', $studentId)
                 ->where('halakat_id', $oldHalakatId)
-                ->where('memorize_type', 'مراجعة')
                 ->delete();
+
+            if ($lastProgress) {
+                \App\Models\QuranProgress::create([
+                    'student_id' => $studentId,
+                    'halakat_id' => $newHalakatId,
+                    'teacher_id' => $lastProgress->teacher_id,
+                    'surah_id' => $lastProgress->surah_id,
+                    'from_aya' => $lastProgress->from_aya,
+                    'to_aya' => $lastProgress->to_aya,
+                    'juz_number' => $lastProgress->juz_number,
+                    'quran_page_number' => $lastProgress->quran_page_number,
+                    'evaluation' => $lastProgress->evaluation,
+                    'memorize_type' => $lastProgress->memorize_type,
+                    'notes' => $lastProgress->notes,
+                    'date' => $lastProgress->date,
+                ]);
+            }
         }
 
         return $newEnrollment;
