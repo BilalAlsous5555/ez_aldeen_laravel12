@@ -1,6 +1,6 @@
 uid=26_0 RootWebArea "لوحة التحكم :: معهد عز الدين القسام" url="http://127.0.0.1:8000/admin/dashboard"
   uid=26_1 banner
-    uid=26_2 link "معهد عزالدين القسام" url="http://127.0.0.1:8000/"
+    uid=26_2 link "معهد عزالدين القسام" url="http://127.0.0.1:8000/admin/dashboard"
       uid=26_3 StaticText "معهد عزالدين القسام"
     uid=26_4 link "لوحة التحكم " url="http://127.0.0.1:8000/admin/dashboard"
       uid=26_5 StaticText "لوحة التحكم"

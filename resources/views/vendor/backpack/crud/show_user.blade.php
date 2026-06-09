@@ -111,7 +111,7 @@ $revisionJuzProgress = $student->progress()
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <h3 class="card-title mb-0"><i class="la la-user"></i> {{ $student->name }}</h3>
                     <div>
-                        <a href="{{ backpack_url('user/' . $student->id . '/edit') }}" class="btn btn-sm btn-outline-primary"><i class="la la-edit"></i> تعديل</a>
+                                                <a href="{{ backpack_url('user/' . $student->id . '/edit') }}" class="btn btn-sm btn-outline-primary"><i class="la la-edit"></i> تعديل</a>
                         <form method="POST" action="{{ backpack_url('user/' . $student->id) }}" style="display:inline;" onsubmit="return confirm('هل أنت متأكد من حذف هذا الطالب؟');">
                             @csrf
                             @method('DELETE')
