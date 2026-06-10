@@ -315,7 +315,22 @@ class UserCrudController extends CrudController
             }
         }
 
-        return $this->performSaveActionRedirect($user);
+        \Prologue\Alerts\Facades\Alert::success('تم تحديث البيانات بنجاح')->flash();
+
+        return redirect(backpack_url('user/'.$user->id.'/show'));
+    }
+
+    public function destroy($id)
+    {
+        $this->crud->hasAccessOrFail('delete');
+        $id = $this->crud->getCurrentEntryId() ?? $id;
+
+        $entry = $this->crud->getModel()->findOrFail($id);
+        $entry->delete();
+
+        \Prologue\Alerts\Facades\Alert::success('تم حذف المستخدم بنجاح')->flash();
+
+        return redirect(backpack_url('dashboard'));
     }
 
     /**
