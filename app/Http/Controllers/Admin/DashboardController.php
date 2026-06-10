@@ -55,8 +55,12 @@ class DashboardController extends Controller
                 ->whereHas('student', fn ($q) => $q->whereNull('deleted_at'))
                 ->count();
 
-            $totalSurahsCount = Studentachievement::where('type', 'surah_memorized')->count();
-            $totalJuzCount = Studentachievement::where('type', 'juz_memorized')->count();
+            $totalSurahsCount = Studentachievement::where('type', 'surah_memorized')
+                ->whereHas('student', fn ($q) => $q->whereNull('deleted_at'))
+                ->count();
+            $totalJuzCount = Studentachievement::where('type', 'juz_memorized')
+                ->whereHas('student', fn ($q) => $q->whereNull('deleted_at'))
+                ->count();
 
             $halakat = Halakat::whereNull('deleted_at')
                 ->with(['teacher', 'activeStudents'])

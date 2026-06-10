@@ -25,6 +25,9 @@
 /* ======================== */
 /* Arabic Font for All Page */
 /* ======================== */
+body {
+    font-size: 18px !important;
+}
 body,
 body *:not(.la):not([class*="la-"]):not(i.la):not(span.la):not(i[class*="la-"]):not(span[class*="la-"]) {
     font-family: 'Amiri', 'Traditional Arabic', 'Simplified Arabic', serif !important;
@@ -54,6 +57,24 @@ span[class*="la-"],
 .bg-success { background-color: #2d8a4a !important; }
 .badge.bg-primary { background-color: #2d8a4a !important; }
 .badge.bg-warning { background-color: #d4af37 !important; color: #2c3e50 !important; }
+
+/* ======================== */
+/* Navbar Brand Logo Gold   */
+/* ======================== */
+.navbar-brand,
+.navbar-brand b,
+.navbar-brand a,
+a.navbar-brand,
+.h2.text-decoration-none,
+.h2.text-decoration-none b {
+    color: #d4af37 !important;
+}
+.navbar-brand:hover,
+.navbar-brand a:hover,
+.h2.text-decoration-none:hover,
+.h2.text-decoration-none:hover b {
+    color: #b8941f !important;
+}
 
 .btn-primary {
     background-color: #2d8a4a !important;

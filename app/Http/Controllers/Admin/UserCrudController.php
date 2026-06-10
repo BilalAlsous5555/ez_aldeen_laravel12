@@ -326,6 +326,19 @@ class UserCrudController extends CrudController
         $id = $this->crud->getCurrentEntryId() ?? $id;
 
         $entry = $this->crud->getModel()->findOrFail($id);
+
+        $lastProgressId = \App\Models\QuranProgress::where('student_id', $entry->id)
+            ->where('memorize_type', 'حفظ')
+            ->whereNotNull('surah_id')
+            ->orderByDesc('id')
+            ->value('id');
+
+        \App\Models\QuranProgress::where('student_id', $entry->id)
+            ->where('id', '!=', $lastProgressId)
+            ->delete();
+
+        \App\Models\Attendance::where('student_id', $entry->id)->delete();
+
         $entry->delete();
 
         \Prologue\Alerts\Facades\Alert::success('تم حذف المستخدم بنجاح')->flash();
