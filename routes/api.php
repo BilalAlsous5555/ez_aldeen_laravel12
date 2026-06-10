@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\UserController\ApiAttendanceController;
 use App\Http\Controllers\UserController\ApiQuranProgressController;
+use App\Http\Controllers\UserController\ApiStudentOwnProfileController;
 use App\Http\Controllers\UserController\ApiStudentProfileController;
 use App\Http\Controllers\UserController\ApiTeacherDashboardController;
 use App\Http\Controllers\Users\Api\Auth\AuthController;
@@ -31,4 +32,5 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::post('/teacher/quran-progress', [ApiQuranProgressController::class, 'store']);
     Route::get('/teacher/quran-progress/history', [ApiQuranProgressController::class, 'history']);
     Route::get('/student/{id}/profile', [ApiStudentProfileController::class, 'show']);
+    Route::get('/student/profile', [ApiStudentOwnProfileController::class, 'profile']);
 });

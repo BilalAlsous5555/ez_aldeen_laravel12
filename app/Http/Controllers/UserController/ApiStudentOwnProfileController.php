@@ -7,20 +7,20 @@ use App\Models\Studentachievement;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
 
-class ApiStudentProfileController extends Controller
+class ApiStudentOwnProfileController extends Controller
 {
-    public function show(int $id): JsonResponse
+    public function profile(): JsonResponse
     {
-        $teacher = auth()->user();
+        $user = auth()->user();
 
-        if (! $teacher || $teacher->role !== 'teacher') {
+        if (! $user || $user->role !== 'student') {
             return response()->json(['message' => 'غير مصرح لك'], 403);
         }
 
         $student = User::where('role', 'student')
             ->whereNull('deleted_at')
             ->with(['activeEnrollment.halqa.teacher'])
-            ->find($id);
+            ->find($user->id);
 
         if (! $student) {
             return response()->json(['message' => 'الطالب غير موجود'], 404);
@@ -48,24 +48,21 @@ class ApiStudentProfileController extends Controller
                     'teacher_name' => $a->teacher?->name,
                 ]);
 
-            $currentJuz = collect();
-            if ($currentHalqaId) {
-                $currentJuz = $student->progress()
-                    ->where('memorize_type', 'حفظ')
-                    ->whereNotNull('juz_number')
-                    ->whereNull('surah_id')
-                    ->where('halakat_id', $currentHalqaId)
-                    ->orderBy('date', 'desc')
-                    ->get()
-                    ->map(fn ($p) => [
-                        'id' => $p->id,
-                        'juz_number' => $p->juz_number,
-                        'evaluation' => $p->evaluation,
-                        'notes' => $p->notes,
-                        'teacher_name' => $p->teacher?->name,
-                        'date' => $p->date?->format('Y-m-d'),
-                    ]);
-            }
+            $currentJuz = $student->progress()
+                ->where('memorize_type', 'حفظ')
+                ->whereNotNull('juz_number')
+                ->whereNull('surah_id')
+                ->where('halakat_id', $currentHalqaId)
+                ->orderBy('date', 'desc')
+                ->get()
+                ->map(fn ($p) => [
+                    'id' => $p->id,
+                    'juz_number' => $p->juz_number,
+                    'evaluation' => $p->evaluation,
+                    'notes' => $p->notes,
+                    'teacher_name' => $p->teacher?->name,
+                    'date' => $p->date?->format('Y-m-d'),
+                ]);
 
             $revisionSurahs = $student->progress()
                 ->where('memorize_type', 'مراجعة')
@@ -90,7 +87,6 @@ class ApiStudentProfileController extends Controller
                 ->whereNotNull('juz_number')
                 ->whereNull('surah_id')
                 ->where('halakat_id', $currentHalqaId)
-                ->with('surah')
                 ->orderBy('date', 'desc')
                 ->get()
                 ->map(fn ($p) => [
@@ -184,10 +180,10 @@ class ApiStudentProfileController extends Controller
             'student' => [
                 'id' => $student->id,
                 'name' => $student->name,
-                // 'email' => $student->email,
-                // 'phone' => $student->phone,
-                // 'birth_date' => $student->birth_date?->format('Y-m-d'),
-                // 'role' => $student->arabic_role ?? $student->role,
+                'email' => $student->email,
+                'phone' => $student->phone,
+                'birth_date' => $student->birth_date?->format('Y-m-d'),
+                'role' => $student->arabic_role ?? $student->role,
                 'created_at' => $student->created_at?->format('Y-m-d'),
             ],
             'current_halaka' => $currentHalqa ? [
