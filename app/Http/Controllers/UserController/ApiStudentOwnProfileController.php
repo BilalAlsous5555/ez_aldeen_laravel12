@@ -180,6 +180,7 @@ class ApiStudentOwnProfileController extends Controller
             'student' => [
                 'id' => $student->id,
                 'name' => $student->name,
+                'gender' => $student->gender,
                 'email' => $student->email,
                 'phone' => $student->phone,
                 'birth_date' => $student->birth_date?->format('Y-m-d'),

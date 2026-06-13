@@ -184,10 +184,7 @@ class ApiStudentProfileController extends Controller
             'student' => [
                 'id' => $student->id,
                 'name' => $student->name,
-                // 'email' => $student->email,
-                // 'phone' => $student->phone,
-                // 'birth_date' => $student->birth_date?->format('Y-m-d'),
-                // 'role' => $student->arabic_role ?? $student->role,
+                'gender' => $student->gender,
                 'created_at' => $student->created_at?->format('Y-m-d'),
             ],
             'current_halaka' => $currentHalqa ? [

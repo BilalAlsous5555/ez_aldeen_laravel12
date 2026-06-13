@@ -32,6 +32,7 @@ class UserRequest extends FormRequest
             'phone' => 'required|string|min:10|max:10|unique:users,phone,'.$id,
             'birth_date' => 'nullable|date',
             'role' => 'required|in:admin,teacher,student',
+            'gender' => 'required|in:ذكر,انثى',
             'assign_halakat' => 'nullable|exists:halakat,id',
         ];
 

@@ -6,7 +6,6 @@ use App\Models\Attendance;
 use App\Models\Halakat;
 use App\Models\Studentachievement;
 use App\Models\User;
-use Carbon\Carbon;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\Cache;
 
@@ -36,9 +35,31 @@ class DashboardController extends Controller
                 ->whereNull('deleted_at')
                 ->count();
 
+            $maleStudentsCount = User::where('role', 'student')
+                ->whereNull('deleted_at')
+                ->where('gender', 'ذكر')
+                ->count();
+
+            $femaleStudentsCount = User::where('role', 'student')
+                ->whereNull('deleted_at')
+                ->where('gender', 'انثى')
+                ->count();
+
             $activeTeachersCount = User::where('role', 'teacher')
                 ->whereNull('deleted_at')
                 ->whereHas('halqa')
+                ->count();
+
+            $maleTeachersCount = User::where('role', 'teacher')
+                ->whereNull('deleted_at')
+                ->whereHas('halqa')
+                ->where('gender', 'ذكر')
+                ->count();
+
+            $femaleTeachersCount = User::where('role', 'teacher')
+                ->whereNull('deleted_at')
+                ->whereHas('halqa')
+                ->where('gender', 'انثى')
                 ->count();
 
             $activeHalakatCount = Halakat::whereNull('deleted_at')->count();
@@ -125,12 +146,14 @@ class DashboardController extends Controller
             }
             $committedStudents = $committedStudents->sortByDesc('percentage')->values();
 
+            $allActiveStudents = User::where('role', 'student')
+                ->whereNull('deleted_at')
+                ->whereNotNull('birth_date')
+                ->get();
+
             $ageGroups = ['under8' => 0, 'bet8_12' => 0, 'bet12_18' => 0, 'over18' => 0];
-            foreach ($allStudents as $student) {
-                $age = $student->birth_date ? Carbon::parse($student->birth_date)->diffInYears($now) : null;
-                if ($age === null) {
-                    continue;
-                }
+            foreach ($allActiveStudents as $student) {
+                $age = (int) $student->birth_date->diffInYears($now);
                 if ($age < 8) {
                     $ageGroups['under8']++;
                 } elseif ($age <= 12) {
@@ -175,7 +198,11 @@ class DashboardController extends Controller
 
             return compact(
                 'activeStudentsCount',
+                'maleStudentsCount',
+                'femaleStudentsCount',
                 'activeTeachersCount',
+                'maleTeachersCount',
+                'femaleTeachersCount',
                 'activeHalakatCount',
                 'withoutHalqaCount',
                 'todayAttendanceCount',

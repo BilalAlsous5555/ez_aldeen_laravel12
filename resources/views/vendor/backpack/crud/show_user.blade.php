@@ -143,6 +143,10 @@ $revisionJuzProgress = $student->progress()
                                     <th class="ps-0">تاريخ الميلاد</th>
                                     <td>{{ $student->birth_date ? $student->birth_date->format('Y-m-d') : '—' }}</td>
                                 </tr>
+                                <tr>
+                                    <th class="ps-0">الجنس</th>
+                                    <td>{{ $student->gender }}</td>
+                                </tr>
                             </table>
                         </div>
                         <div class="col-md-6">

@@ -37,6 +37,7 @@ class ApiQuranProgressController extends Controller
             ->map(fn ($student) => [
                 'id' => $student->id,
                 'name' => $student->name,
+                'gender' => $student->gender,
                 'last_progress' => $this->getLastProgress($student->id, $halqa->id),
             ]);
 

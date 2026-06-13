@@ -25,6 +25,7 @@
                     <div>
                         <div class="text-muted small">إجمالي الطلاب</div>
                         <div class="fs-2 fw-bold">{{ $activeStudentsCount }}</div>
+                        <div class="text-muted small mt-1"><span class="text-primary">الذكور: {{ $maleStudentsCount }}</span> | <span class="text-danger">الإناث: {{ $femaleStudentsCount }}</span></div>
                     </div>
                 </div>
             </div>
@@ -36,6 +37,7 @@
                     <div>
                         <div class="text-muted small">إجمالي المدرسين</div>
                         <div class="fs-2 fw-bold">{{ $activeTeachersCount }}</div>
+                        <div class="text-muted small mt-1"><span class="text-primary">الذكور: {{ $maleTeachersCount }}</span> | <span class="text-danger">الإناث: {{ $femaleTeachersCount }}</span></div>
                     </div>
                 </div>
             </div>

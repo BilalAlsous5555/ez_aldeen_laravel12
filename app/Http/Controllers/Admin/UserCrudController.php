@@ -184,6 +184,7 @@ class UserCrudController extends CrudController
         //     $query->orWhere('phone', 'like', '%'.$searchTerm.'%');
         // });
         CRUD::column('birth_date')->type('date')->label('تاريخ الولادة');
+        CRUD::column('gender')->type('text')->label('الجنس');
         CRUD::column('created_at')->type('date')->label('تاريخ الانضمام');
 
         if (in_array(request('filter'), ['deleted_students', 'deleted_teachers'])) {
@@ -210,6 +211,7 @@ class UserCrudController extends CrudController
         CRUD::column('email')->type('email')->label('البريد الإلكتروني');
         CRUD::column('phone')->type('text')->label('رقم الهاتف');
         CRUD::column('arabic_role')->type('text')->label('الدور');
+        CRUD::column('gender')->type('text')->label('الجنس');
         CRUD::column('birth_date')->type('date')->label('تاريخ الميلاد');
         CRUD::column('created_at')->type('datetime')->label('تاريخ الانضمام');
     }
@@ -225,6 +227,9 @@ class UserCrudController extends CrudController
         CRUD::field('birth_date')->type('date')->label('تاريخ الميلاد');
         CRUD::field('role')->type('select_from_array')->label('الدور')
             ->options(['teacher' => 'مدرس', 'student' => 'طالب']);
+        CRUD::field('gender')->type('select_from_array')->label('الجنس')
+            ->options(['ذكر' => 'ذكر', 'انثى' => 'انثى'])
+            ->default('ذكر');
 
         CRUD::field('selected_halaka')
             ->type('select_from_array')
@@ -248,7 +253,7 @@ class UserCrudController extends CrudController
         $halakatId = $request->input('selected_halaka');
         $role = $request->input('role');
 
-        $data = $request->only(['name', 'phone', 'email', 'password', 'birth_date', 'role']);
+        $data = $request->only(['name', 'phone', 'email', 'password', 'birth_date', 'role', 'gender']);
 
         $item = \App\Models\User::create($data);
 
@@ -290,7 +295,7 @@ class UserCrudController extends CrudController
         $halakatId = $request->input('selected_halaka');
         $role = $request->input('role') ?? $user->role;
 
-        $data = $request->only(['name', 'phone', 'email', 'birth_date', 'role']);
+        $data = $request->only(['name', 'phone', 'email', 'birth_date', 'role', 'gender']);
 
         if (! empty($request->input('password'))) {
             $data['password'] = $request->input('password');
@@ -364,6 +369,8 @@ class UserCrudController extends CrudController
         CRUD::field('birth_date')->type('date')->label('تاريخ الميلاد');
         CRUD::field('role')->type('select_from_array')->label('الدور')
             ->options(['teacher' => 'مدرس', 'student' => 'طالب']);
+        CRUD::field('gender')->type('select_from_array')->label('الجنس')
+            ->options(['ذكر' => 'ذكر', 'انثى' => 'انثى']);
 
         // Show halakat field for students and teachers only
         $entry = $this->crud->getCurrentEntry();

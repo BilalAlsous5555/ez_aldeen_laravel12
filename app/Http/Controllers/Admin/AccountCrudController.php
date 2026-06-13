@@ -51,7 +51,7 @@ class AccountCrudController extends CrudController
         CRUD::column('email')->type('email')->label('البريد الإلكتروني')->searchLogic(function ($query, $column, $searchTerm) {
             $query->orWhere('email', 'like', '%'.$searchTerm.'%');
         });
-        CRUD::column('password')->type('text')->label('كلمة المرور')->searchLogic(false);
+        // CRUD::column('password')->type('text')->label('كلمة المرور')->searchLogic(false);
         CRUD::column('birth_date')->type('date')->label('تاريخ الميلاد');
         CRUD::column('created_at')->type('date')->label('تاريخ الانضمام');
     }

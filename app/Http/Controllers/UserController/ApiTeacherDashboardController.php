@@ -51,6 +51,7 @@ class ApiTeacherDashboardController extends Controller
             return [
                 'id' => $student->id,
                 'name' => $student->name,
+                'gender' => $student->gender,
                 'phone' => $student->phone ?? '',
                 'halaka_attendance_percentage' => $halqaAttPct,
                 'last_memorize_progress' => $lastProgress ? [

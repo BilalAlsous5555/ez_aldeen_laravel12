@@ -34,6 +34,7 @@ class ApiAttendanceController extends Controller
             return [
                 'id' => $student->id,
                 'name' => $student->name,
+                'gender' => $student->gender,
             ];
         });
 
