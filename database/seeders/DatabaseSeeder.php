@@ -22,7 +22,9 @@ class DatabaseSeeder extends Seeder
         DB::table('users')->truncate();
         DB::table('personal_access_tokens')->truncate();
         DB::statement('SET FOREIGN_KEY_CHECKS=1');
-
+        $this->call(
+            AdminUserSeeder::class
+        );
         $this->call([
             SurahSeeder::class,
             QuranPagesSeeder::class,
