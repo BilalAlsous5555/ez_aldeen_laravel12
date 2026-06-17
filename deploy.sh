@@ -6,46 +6,49 @@
 
 echo "=== ez_aldeen Deployment Script ==="
 
-# 1. Set permissions
-echo "[1/7] Setting permissions..."
+echo "[1/8] Setting permissions..."
 chmod -R 775 storage
 chmod -R 775 bootstrap/cache
 
-# 2. Create storage symlink
-echo "[2/7] Creating storage symlink..."
-php artisan storage:link
+echo "[2/8] Creating storage symlink..."
+rm -f public/storage
+php artisan storage:link 2>/dev/null
+if [ ! -L "public/storage" ]; then
+    echo "  Symlink failed. Copying files instead..."
+    cp -r storage/app/public public/storage
+    echo "  Files copied to public/storage"
+else
+    echo "  Symlink OK"
+fi
 
-# 3. Clear all caches
-echo "[3/7] Clearing caches..."
-php artisan config:clear
-php artisan view:clear
-php artisan route:clear
-php artisan cache:clear
+echo "[3/8] Clearing all caches..."
+php artisan optimize:clear
 
-# 4. Cache Backpack assets (basset)
-echo "[4/7] Caching Backpack assets..."
+echo "[4/8] Caching Backpack assets..."
 php artisan basset:cache
 
-# 5. Run migrations
-echo "[5/7] Running migrations..."
+echo "[5/8] Running migrations..."
 php artisan migrate --force
 
-# 6. Optimize for production
-echo "[6/7] Optimizing for production..."
+echo "[6/8] Seeding admin account..."
+php artisan db:seed --class=AdminUserSeeder --force
+
+echo "[7/8] Optimizing for production..."
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
 
-# 7. Verify storage link
-echo "[7/7] Verifying storage link..."
-if [ -L "public/storage" ]; then
-    echo "✓ Storage symlink OK"
+echo "[8/8] Verifying..."
+if [ -L "public/storage" ] || [ -d "public/storage" ]; then
+    echo "  Storage link OK"
 else
-    echo "✗ Storage symlink missing! Run: php artisan storage:link"
+    echo "  WARNING: public/storage missing!"
 fi
 
 echo ""
 echo "=== Deployment Complete! ==="
-echo "Visit your site at the APP_URL in .env"
+echo "Login: your-domain.com/admin"
+echo "Email: moder@ezaldeen.com"
+echo "Password: 1122ezaldeenX2026"
 echo ""
-echo "IMPORTANT: Delete this file (deploy.sh) after running!"
+echo "IMPORTANT: Delete deploy.sh and fix_storage.php after running!"
